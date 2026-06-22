@@ -1,0 +1,52 @@
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
+import { CapacityCard } from "@/components/CapacityCard";
+import { CategoryGrid } from "@/components/CategoryGrid";
+import { PageHeader } from "@/components/PageHeader";
+import { ScanStatusBar } from "@/components/ScanStatusBar";
+import { Button } from "@/components/ui/button";
+
+export function OverviewPage() {
+  const navigate = useNavigate();
+  const { data: volume } = useQuery({
+    queryKey: ["volume"],
+    queryFn: () => api.volumeGetCDrive(),
+  });
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => api.indexGetCategoryStats(),
+  });
+  const { data: scanInfo } = useQuery({
+    queryKey: ["scan-status"],
+    queryFn: () => api.scanGetStatus(),
+  });
+
+  return (
+    <div className="flex h-full flex-col overflow-auto">
+      <PageHeader
+        title="磁盘总览"
+        description="C 盘空间状况与扫描入口"
+      />
+      <div className="flex-1 space-y-6 p-6">
+        {volume && <CapacityCard volume={volume} />}
+        <ScanStatusBar lastCompletedAt={scanInfo?.last_completed_at ?? null} />
+        <div>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            分类占用
+          </h3>
+          {categories && <CategoryGrid categories={categories} />}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => navigate("/explorer")}>查看空间浏览</Button>
+          <Button variant="secondary" onClick={() => navigate("/cleanup")}>
+            查看清理建议
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/analysis")}>
+            问 AI
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,15 @@
+# Cargo mirror for China network (rsproxy)
+# See: https://rsproxy.cn/
+
+[source.crates-io]
+replace-with = "rsproxy-sparse"
+
+[source.rsproxy-sparse]
+registry = "sparse+https://rsproxy.cn/index/"
+
+[registries.rsproxy-sparse]
+protocol = "sparse"
+
+[net]
+retry = 3
+git-fetch-with-cli = true

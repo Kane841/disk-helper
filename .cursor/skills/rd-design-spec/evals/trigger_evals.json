@@ -1,0 +1,82 @@
+[
+  {
+    "query": "我刚跟产品对完需求，现在要出一份用户中心注册登录模块的开发方案，包含了表设计和整个流程图流转的全套内容，麻烦按你规范的框架给出初稿。",
+    "should_trigger": true
+  },
+  {
+    "query": "咱们的支付组件需要设计成一个内部的包，我们要有一个说明文档告诉大家这个包的功能架构和怎么调它的接口的设计。",
+    "should_trigger": true
+  },
+  {
+    "query": "帮忙按照公司规范，输出个报表导出微服务的详细设计文档。里面用mermaid把异步下载的交互流转给我展示下。",
+    "should_trigger": true
+  },
+  {
+    "query": "老板让我接手重构老的权限系统。你能不能帮我理清整个新版 RBAC 的功能架构和领域模型，出个完整规范的排版好的技术设计？",
+    "should_trigger": true
+  },
+  {
+    "query": "麻烦写一份商品库存扣减方案的设计规范，包含 Redis Lua 扣减的核心逻辑阐述和并发下的时序流转。",
+    "should_trigger": true
+  },
+  {
+    "query": "接到需求，要开发一个网关层的限流模块。你帮我把它的底层令牌桶机制、Redis 存储结构，以及给后台下发限流策略的 API 详细写进设计规格书里。",
+    "should_trigger": true
+  },
+  {
+    "query": "我要写《某某SaaS数据同步工具产品设计》的评审，你能不能先给我提供一个包含系统架构跟责任矩阵的Markdown版详细设计做底稿？",
+    "should_trigger": true
+  },
+  {
+    "query": "那个前后台分离的项目，发全员通知信的模块，请结合具体发送日志表和配置表以及发送的流程流转图，输出一版技术设计方案。",
+    "should_trigger": true
+  },
+  {
+    "query": "公司新上的短链接生成服务，需要你给搞一份标准的架构方案，里面必须包含高并发哈希冲突的核心设计和数据表设计。",
+    "should_trigger": true
+  },
+  {
+    "query": "我想规划下一个轻量级定时任务调度中心系统，麻烦出一下它的系统详细规范，包含关键模块职责和引擎的内部流转调用。",
+    "should_trigger": true
+  },
+  {
+    "query": "我的 Java 用户签到接口一直抛出 NullPointerException，你能帮我根据这段给出的代码定位下异常原因吗？",
+    "should_trigger": false
+  },
+  {
+    "query": "咱们项目里的那个 WAF 功能控制台，前端 Vue3 页面怎么写比较好看？有没有推荐的 UI 库？给点排版建议。",
+    "should_trigger": false
+  },
+  {
+    "query": "帮我用 Python 写个爬虫小脚本，能把网上的电影排行榜抓下来存到本地 csv 就行。",
+    "should_trigger": false
+  },
+  {
+    "query": "需要给客户端老代码重构，抽出一个 StringUtils 类放到公共包里，请直接给出抽取后的具体实现代码。",
+    "should_trigger": false
+  },
+  {
+    "query": "这周末读书会轮到我分享，能帮我总结一下《领域驱动设计》这本书第三章里的核心思想和大纲吗？",
+    "should_trigger": false
+  },
+  {
+    "query": "我要给刚刚写的商品导入服务加个单测，你能帮我基于 JUnit5 写几个模拟测试用例吗？要有断言的。",
+    "should_trigger": false
+  },
+  {
+    "query": "帮我只写一个系统架构图的 mermaid 代码就行，要在图里体现出微服务网关和后面五个微服务的上下游分布结构。",
+    "should_trigger": false
+  },
+  {
+    "query": "帮我在我项目的 README.md 根目录下加一段关于我们整个系统是什么的业务介绍，随便一两句话大概说说就行。",
+    "should_trigger": false
+  },
+  {
+    "query": "发现生产环境数据库慢查询很多，你看看这个 user_logs 表应该加什么样的联合索引或者调整下查询逻辑能变快点？",
+    "should_trigger": false
+  },
+  {
+    "query": "我要准备去面试阿里了，你帮我大概复习下常见的设计模式和面向对象六大设计原则，最好帮我举些简单的例子说明下。",
+    "should_trigger": false
+  }
+]

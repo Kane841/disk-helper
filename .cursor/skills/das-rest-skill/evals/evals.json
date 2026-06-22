@@ -1,0 +1,23 @@
+{
+  "skill_name": "das-rest-skill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我们需要为资产管理模块设计一套提供给外部调用的 OpenAPI，包含获取资产列表，创建资产和通过 ID 删除资产。请按照 API 规范设计。还需要告知对方如何生成 token。",
+      "expected_output": "包含规范的 RESTful 接口路径（如 /openapi/v1.0/assets），正确使用 HTTP 请求方法（GET、POST、DELETE）。包含标准的返回结构（确保有 data 对象或 error 对象），并说明基于 appId、appSecret、timestamp 和 sign 获取 token 的流程。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我正在用 Java SDK 也就是 das-rest-sdk 开发个服务端接口，想实现分页查用户列表的功能，请给下代码示例和响应封装的方法。",
+      "expected_output": "必须包含 Java SDK 中的 Page 和 Sort 对象作为参数。返回体必须使用 SuccessCode.Success 构建。分页参数必须响应 $page、$size 格式。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我们的 Go 服务提供一个查询日志的接口，如果客户端传了非法的查询时间，接口应该返回什么样的错误结构呢？帮我写段基于 Go SDK 的响应代码。",
+      "expected_output": "必须使用规范中定义的 ErrorCode，如 BadArgument 或 BadTimeArgument。并且需要提供使用 das-rest-sdk-go 的错误返回示例，包含 error、code 和 message 等字段。",
+      "files": []
+    }
+  ]
+}
