@@ -15,9 +15,10 @@ export function OverviewPage() {
     queryKey: ["volume"],
     queryFn: () => api.volumeGetCDrive(),
   });
-  const { data: categories } = useQuery({
+  const { data: categories, isError: categoriesError } = useQuery({
     queryKey: ["categories"],
     queryFn: () => api.indexGetCategoryStats(),
+    retry: false,
   });
   const { data: scanInfo } = useQuery({
     queryKey: ["scan-status"],
@@ -38,6 +39,9 @@ export function OverviewPage() {
             分类占用
           </h3>
           {categories && <CategoryGrid categories={categories} />}
+          {!categories && categoriesError && (
+            <p className={cn("text-sm", text.muted)}>完成首次扫描后将显示分类占用</p>
+          )}
         </div>
         <div className="flex flex-wrap gap-3">
           <Button onClick={() => navigate("/explorer")}>查看空间浏览</Button>

@@ -59,6 +59,30 @@ export const mockApi = {
     };
   },
 
+  async scanStart(_type: "full" | "incremental") {
+    await delay(50);
+    scanStatus = "running";
+    return { scan_run_id: "mock-scan-run" };
+  },
+
+  async scanPause() {
+    await delay(50);
+    scanStatus = "paused";
+    return { status: "paused" };
+  },
+
+  async scanResume() {
+    await delay(50);
+    scanStatus = "running";
+    return { status: "running" };
+  },
+
+  async scanCancel() {
+    await delay(50);
+    scanStatus = "idle";
+    return { status: "cancelled" };
+  },
+
   async indexGetChildren(path: string): Promise<FileNode[]> {
     await delay();
     return getChildrenOf(path);

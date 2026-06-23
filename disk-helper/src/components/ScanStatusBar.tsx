@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { listen } from "@tauri-apps/api/event";
 import { mockApi } from "@/mocks/mock-api";
-import { useScanStore } from "@/stores/app-store";
+import { api, useMockApi } from "@/lib/api";
+import { useScanStore, useToastStore } from "@/stores/app-store";
 import type { ScanStatus } from "@/types";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -16,20 +19,103 @@ const STATUS_LABELS: Record<ScanStatus, string> = {
   failed: "失败",
 };
 
+interface ScanProgressPayload {
+  scan_run_id: string;
+  percent: number;
+  scanned_files: number;
+  skipped_files: number;
+}
+
+interface ScanCompletedPayload {
+  scan_run_id: string;
+  status: string;
+  scanned_files: number;
+  duration_ms: number;
+}
+
 interface ScanStatusBarProps {
   lastCompletedAt: string | null;
 }
 
+function toScanStatus(status: string): ScanStatus {
+  if (
+    status === "idle" ||
+    status === "running" ||
+    status === "paused" ||
+    status === "completed" ||
+    status === "failed"
+  ) {
+    return status;
+  }
+  if (status === "cancelled") return "idle";
+  return "failed";
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return fallback;
+}
+
 export function ScanStatusBar({ lastCompletedAt }: ScanStatusBarProps) {
+  const queryClient = useQueryClient();
+  const showToast = useToastStore((s) => s.show);
   const { status, progress, scannedFiles, setStatus, setProgress, setScannedFiles } =
     useScanStore();
   const timerRef = useRef<number | null>(null);
+
+  const syncFromBackend = async () => {
+    const snapshot = await api.scanGetStatus();
+    setStatus(snapshot.status);
+    setProgress(snapshot.progress_percent);
+    setScannedFiles(snapshot.scanned_files);
+  };
 
   useEffect(() => {
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (useMockApi) return;
+
+    syncFromBackend().catch((error: Error) => {
+      showToast(error.message);
+    });
+
+    let disposed = false;
+    const unsubs: Array<() => void> = [];
+
+    (async () => {
+      unsubs.push(
+        await listen<ScanProgressPayload>("scan://progress", (event) => {
+          if (disposed) return;
+          setStatus("running");
+          setProgress(event.payload.percent);
+          setScannedFiles(event.payload.scanned_files);
+        }),
+      );
+      unsubs.push(
+        await listen<ScanCompletedPayload>("scan://completed", (event) => {
+          if (disposed) return;
+          setStatus(toScanStatus(event.payload.status));
+          setProgress(event.payload.status === "completed" ? 100 : useScanStore.getState().progress);
+          setScannedFiles(event.payload.scanned_files);
+          queryClient.invalidateQueries({ queryKey: ["scan-status"] });
+          queryClient.invalidateQueries({ queryKey: ["categories"] });
+          queryClient.invalidateQueries({ queryKey: ["index-children"] });
+          queryClient.invalidateQueries({ queryKey: ["top-files"] });
+          queryClient.invalidateQueries({ queryKey: ["top-folders"] });
+        }),
+      );
+    })();
+
+    return () => {
+      disposed = true;
+      unsubs.forEach((unsub) => unsub());
+    };
+  }, [queryClient, setProgress, setScannedFiles, setStatus, showToast]);
 
   const startTimer = () => {
     if (timerRef.current) window.clearInterval(timerRef.current);
@@ -46,32 +132,77 @@ export function ScanStatusBar({ lastCompletedAt }: ScanStatusBarProps) {
     }, 120);
   };
 
-  const handleStart = () => {
-    setStatus("running");
-    setProgress(0);
-    setScannedFiles(0);
-    mockApi.setScanStatus("running");
-    startTimer();
+  const handleStart = async (type: "full" | "incremental" = "full") => {
+    if (useMockApi) {
+      setStatus("running");
+      setProgress(0);
+      setScannedFiles(0);
+      mockApi.setScanStatus("running");
+      startTimer();
+      return;
+    }
+
+    try {
+      await api.scanStart(type);
+      setStatus("running");
+      setProgress(0);
+      setScannedFiles(0);
+    } catch (error) {
+      showToast(errorMessage(error, "启动扫描失败"));
+    }
   };
 
-  const handlePause = () => {
-    if (timerRef.current) window.clearInterval(timerRef.current);
-    setStatus("paused");
-    mockApi.setScanStatus("paused");
+  const handlePause = async () => {
+    if (useMockApi) {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+      setStatus("paused");
+      mockApi.setScanStatus("paused");
+      return;
+    }
+
+    try {
+      await api.scanPause();
+      setStatus("paused");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "暂停失败");
+    }
   };
 
-  const handleResume = () => {
-    setStatus("running");
-    mockApi.setScanStatus("running");
-    startTimer();
+  const handleResume = async () => {
+    if (useMockApi) {
+      setStatus("running");
+      mockApi.setScanStatus("running");
+      startTimer();
+      return;
+    }
+
+    try {
+      await api.scanResume();
+      setStatus("running");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "继续扫描失败");
+    }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (!window.confirm("确定取消本次扫描？")) return;
-    if (timerRef.current) window.clearInterval(timerRef.current);
-    setStatus("idle");
-    setProgress(0);
-    mockApi.setScanStatus("idle");
+
+    if (useMockApi) {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+      setStatus("idle");
+      setProgress(0);
+      mockApi.setScanStatus("idle");
+      return;
+    }
+
+    try {
+      await api.scanCancel();
+      setStatus("idle");
+      setProgress(0);
+      setScannedFiles(0);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "取消失败");
+    }
   };
 
   return (
@@ -92,8 +223,8 @@ export function ScanStatusBar({ lastCompletedAt }: ScanStatusBarProps) {
           <div className="flex flex-wrap gap-2">
             {(status === "idle" || status === "completed" || status === "failed") && (
               <>
-                <Button onClick={handleStart}>开始扫描</Button>
-                <Button variant="secondary" onClick={handleStart}>
+                <Button onClick={() => handleStart("full")}>开始扫描</Button>
+                <Button variant="secondary" onClick={() => handleStart("incremental")}>
                   增量扫描
                 </Button>
               </>

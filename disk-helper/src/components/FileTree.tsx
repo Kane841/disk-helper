@@ -11,6 +11,8 @@ interface FileTreeProps {
   onSelect: (node: FileNode) => void;
   onToggle: (path: string) => void;
   level?: number;
+  lazy?: boolean;
+  loadedPaths?: Set<string>;
 }
 
 export function FileTree({
@@ -20,13 +22,17 @@ export function FileTree({
   onSelect,
   onToggle,
   level = 0,
+  lazy = false,
+  loadedPaths,
 }: FileTreeProps) {
   return (
     <ul className={level === 0 ? "space-y-0.5" : "ml-3 border-l border-white/30 pl-2 dark:border-white/10"}>
       {nodes.map((node) => {
-        const hasChildren = node.is_dir && (node.children?.length ?? 0) > 0;
+        const hasLoadedChildren = (node.children?.length ?? 0) > 0;
+        const canExpand = node.is_dir && (lazy ? true : hasLoadedChildren);
         const expanded = expandedPaths.has(node.path);
         const selected = selectedPath === node.path;
+        const isLoading = lazy && node.is_dir && expanded && loadedPaths && !loadedPaths.has(node.path);
 
         return (
           <li key={node.path}>
@@ -45,10 +51,10 @@ export function FileTree({
                   className={cn("w-4 shrink-0 text-xs", text.faint)}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (hasChildren) onToggle(node.path);
+                    if (canExpand) onToggle(node.path);
                   }}
                 >
-                  {hasChildren ? (expanded ? "▼" : "▶") : "·"}
+                  {canExpand ? (expanded ? "▼" : "▶") : "·"}
                 </button>
               ) : (
                 <span className={cn("w-4 shrink-0 text-center text-xs", text.faint)}>•</span>
@@ -58,7 +64,7 @@ export function FileTree({
                 {formatBytes(node.is_dir ? node.folder_size : node.size_bytes)}
               </span>
             </div>
-            {hasChildren && expanded && node.children && (
+            {canExpand && expanded && !isLoading && node.children && (
               <FileTree
                 nodes={node.children}
                 selectedPath={selectedPath}
@@ -66,7 +72,12 @@ export function FileTree({
                 onSelect={onSelect}
                 onToggle={onToggle}
                 level={level + 1}
+                lazy={lazy}
+                loadedPaths={loadedPaths}
               />
+            )}
+            {isLoading && (
+              <p className={cn("ml-6 py-1 text-xs", text.faint)}>加载中…</p>
             )}
           </li>
         );
