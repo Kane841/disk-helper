@@ -1,6 +1,7 @@
 import type { FileNode } from "@/types";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { text } from "@/lib/theme";
 
 interface DiskTreemapProps {
   items: FileNode[];
@@ -16,7 +17,7 @@ export function DiskTreemap({ items, selectedPath, onSelect }: DiskTreemapProps)
 
   if (items.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+      <div className={cn("flex h-full items-center justify-center text-sm", text.muted)}>
         无子项
       </div>
     );
@@ -47,8 +48,10 @@ export function DiskTreemap({ items, selectedPath, onSelect }: DiskTreemapProps)
             style={{ flex: `${minWidth} 1 120px` }}
             title={item.path}
           >
-            <span className="line-clamp-2 text-xs font-semibold">{item.name}</span>
-            <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
+            <span className="line-clamp-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+              {item.name}
+            </span>
+            <span className={cn("text-[11px]", text.muted)}>
               {formatBytes(size)}
             </span>
           </button>

@@ -3,6 +3,8 @@ import { mockApi } from "@/mocks/mock-api";
 import { useScanStore } from "@/stores/app-store";
 import type { ScanStatus } from "@/types";
 import { formatDateTime } from "@/lib/format";
+import { cn } from "@/lib/cn";
+import { text } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 
@@ -77,12 +79,12 @@ export function ScanStatusBar({ lastCompletedAt }: ScanStatusBarProps) {
       <CardBody>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <p className={cn("text-xs font-semibold uppercase tracking-wider", text.muted)}>
               扫描状态
             </p>
-            <p className="mt-1 text-lg font-medium">{STATUS_LABELS[status]}</p>
+            <p className={cn("mt-1 text-lg font-medium", text.primary)}>{STATUS_LABELS[status]}</p>
             {lastCompletedAt && status === "completed" && (
-              <p className="mt-1 text-xs text-zinc-400">
+              <p className={cn("mt-1 text-xs", text.faint)}>
                 上次完成：{formatDateTime(lastCompletedAt)}
               </p>
             )}
@@ -118,7 +120,7 @@ export function ScanStatusBar({ lastCompletedAt }: ScanStatusBarProps) {
         </div>
         {(status === "running" || status === "paused") && (
           <div className="mt-4">
-            <div className="mb-1 flex justify-between text-xs text-zinc-500">
+            <div className={cn("mb-1 flex justify-between text-xs", text.muted)}>
               <span>{progress}%</span>
               <span>已扫描 {scannedFiles.toLocaleString()} 个文件</span>
             </div>

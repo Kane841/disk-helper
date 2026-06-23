@@ -6,6 +6,7 @@ import type { ChatMessage } from "@/types";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 import { PageHeader } from "@/components/PageHeader";
 import { RiskBadge } from "@/components/RiskBadge";
 import { Button, GlassInput } from "@/components/ui/button";
@@ -57,12 +58,12 @@ export function AnalysisPage() {
             清空
           </Button>
         </div>
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className={cn("mt-2 text-xs", text.muted)}>
           来源：{source === "none" ? "无" : source === "browse" ? "空间浏览" : "安全清理"}
         </p>
         <ul className="mt-4 space-y-2">
           {items.length === 0 ? (
-            <li className="text-xs text-zinc-400">从浏览或清理页带入上下文</li>
+            <li className={cn("text-xs", text.faint)}>从浏览或清理页带入上下文</li>
           ) : (
             items.map((item) => (
               <li
@@ -70,7 +71,7 @@ export function AnalysisPage() {
                 className={cn(glass.panel, "p-3 text-xs")}
               >
                 <p className="truncate font-medium">{item.path}</p>
-                <p className="mt-1 text-zinc-500">{formatBytes(item.size_bytes)}</p>
+                <p className={cn("mt-1", text.muted)}>{formatBytes(item.size_bytes)}</p>
                 {item.risk && (
                   <div className="mt-2">
                     <RiskBadge risk={item.risk} />
@@ -98,7 +99,7 @@ export function AnalysisPage() {
                     "max-w-[90%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap backdrop-blur-xl",
                     msg.role === "user"
                       ? "glass-panel-strong bg-emerald-500/15 text-emerald-950 ring-emerald-500/20 dark:text-emerald-100"
-                      : glass.panel,
+                      : cn(glass.panel, text.body),
                   )}
                 >
                   {msg.content}
@@ -106,7 +107,7 @@ export function AnalysisPage() {
               </div>
             ))}
             {loading && (
-              <p className="text-center text-sm text-zinc-500">AI 思考中...</p>
+              <p className={cn("text-center text-sm", text.muted)}>AI 思考中...</p>
             )}
           </div>
         </div>

@@ -8,6 +8,7 @@ import type { FileNode } from "@/types";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 import { DiskTreemap } from "@/components/DiskTreemap";
 import { FileDetailBar, FileTree } from "@/components/FileTree";
 import { PageHeader } from "@/components/PageHeader";
@@ -109,7 +110,7 @@ export function ExplorerPage() {
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <Card className="flex min-h-0 flex-1 flex-col border-0 shadow-none" strong>
             <CardHeader className="py-3">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <span className={cn("text-sm font-medium", text.secondary)}>
                 {rightView === "treemap" && "Treemap · 当前目录子项"}
                 {rightView === "top_files" && "大文件 Top"}
                 {rightView === "top_folders" && "大文件夹 Top"}
@@ -126,7 +127,7 @@ export function ExplorerPage() {
               )}
               {(rightView === "top_files" || rightView === "top_folders") && (
                 <table className="w-full text-sm">
-                  <thead className={cn("text-left text-xs text-zinc-500", glass.tableHead)}>
+                  <thead className={cn("text-left text-xs", glass.tableHead)}>
                     <tr>
                       <th className="px-4 py-2">名称</th>
                       <th className="px-4 py-2">大小</th>
@@ -161,7 +162,7 @@ export function ExplorerPage() {
                       onClick={() => handleSelect(item)}
                     >
                       <p className="font-medium">{item.name}</p>
-                      <p className="truncate text-xs text-zinc-500">{item.path}</p>
+                      <p className={cn("truncate text-xs", text.muted)}>{item.path}</p>
                     </li>
                   ))}
                 </ul>

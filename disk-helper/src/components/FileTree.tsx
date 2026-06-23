@@ -1,6 +1,7 @@
 import type { FileNode } from "@/types";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { text } from "@/lib/theme";
 import { RiskBadge } from "@/components/RiskBadge";
 
 interface FileTreeProps {
@@ -41,7 +42,7 @@ export function FileTree({
               {node.is_dir ? (
                 <button
                   type="button"
-                  className="w-4 shrink-0 text-xs text-zinc-400"
+                  className={cn("w-4 shrink-0 text-xs", text.faint)}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (hasChildren) onToggle(node.path);
@@ -50,10 +51,10 @@ export function FileTree({
                   {hasChildren ? (expanded ? "▼" : "▶") : "·"}
                 </button>
               ) : (
-                <span className="w-4 shrink-0 text-center text-xs text-zinc-400">•</span>
+                <span className={cn("w-4 shrink-0 text-center text-xs", text.faint)}>•</span>
               )}
               <span className="min-w-0 flex-1 truncate font-medium">{node.name}</span>
-              <span className="shrink-0 text-[11px] text-zinc-500">
+              <span className={cn("shrink-0 text-[11px]", text.muted)}>
                 {formatBytes(node.is_dir ? node.folder_size : node.size_bytes)}
               </span>
             </div>
@@ -77,7 +78,7 @@ export function FileTree({
 export function FileDetailBar({ node }: { node: FileNode | null }) {
   if (!node) {
     return (
-      <div className={cn("glass-header px-4 py-3 text-sm text-zinc-500")}>
+      <div className={cn("glass-header px-4 py-3 text-sm", text.muted)}>
         选中一项以查看详情
       </div>
     );
@@ -89,11 +90,11 @@ export function FileDetailBar({ node }: { node: FileNode | null }) {
       )}
     >
       <span className="font-medium">{node.name}</span>
-      <span className="text-zinc-500">
+      <span className={text.muted}>
         {formatBytes(node.is_dir ? node.folder_size : node.size_bytes)}
       </span>
       {node.risk && <RiskBadge risk={node.risk} />}
-      <span className="min-w-0 flex-1 truncate text-xs text-zinc-400">{node.path}</span>
+      <span className={cn("min-w-0 flex-1 truncate text-xs", text.faint)}>{node.path}</span>
     </div>
   );
 }

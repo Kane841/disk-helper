@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 import { Toast } from "@/components/Toast";
 
 const navItems = [
@@ -13,7 +14,7 @@ const navItems = [
 
 export function AppShell() {
   return (
-    <div className="app-shell-bg flex h-screen overflow-hidden text-zinc-900 dark:text-zinc-100">
+    <div className={cn("app-shell-bg flex h-screen overflow-hidden", text.body)}>
       <aside className={cn("glass-sidebar relative z-10 flex w-60 shrink-0 flex-col")}>
         <div className="border-b px-5 py-6 glass-divider">
           <div className="flex items-center gap-2">
@@ -21,13 +22,13 @@ export function AppShell() {
               💾
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
                 Disk Helper
               </div>
-              <h1 className="text-base font-semibold tracking-tight">磁盘助手</h1>
+              <h1 className={cn("text-base font-semibold tracking-tight", text.primary)}>磁盘助手</h1>
             </div>
           </div>
-          <p className="mt-3 text-[11px] text-zinc-500 dark:text-zinc-400">
+          <p className={cn("mt-3 text-[11px]", text.muted)}>
             智能空间管理 · UI 原型
           </p>
         </div>
@@ -43,7 +44,7 @@ export function AppShell() {
                 )
               }
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/30 text-sm dark:bg-white/5">
+              <span className={cn("flex h-7 w-7 items-center justify-center rounded-lg bg-white/30 text-sm dark:bg-white/10 dark:text-zinc-200", text.secondary)}>
                 {item.icon}
               </span>
               {item.label}
@@ -55,15 +56,15 @@ export function AppShell() {
               cn(
                 "ml-4 flex items-center gap-2 rounded-lg px-3 py-2 text-xs transition-colors",
                 isActive
-                  ? "font-medium text-emerald-700 dark:text-emerald-400"
-                  : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300",
+                  ? "font-medium text-emerald-700 dark:text-emerald-300"
+                  : cn(text.muted, "hover:text-zinc-800 dark:hover:text-zinc-100"),
               )
             }
           >
             → 隔离区
           </NavLink>
         </nav>
-        <div className="border-t p-4 text-[10px] text-zinc-400 glass-divider">
+        <div className={cn("border-t p-4 text-[10px] glass-divider", text.faint)}>
           Mock 数据演示
         </div>
       </aside>

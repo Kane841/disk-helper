@@ -6,6 +6,8 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { PageHeader } from "@/components/PageHeader";
 import { ScanStatusBar } from "@/components/ScanStatusBar";
 import { Button } from "@/components/ui/button";
+import { text } from "@/lib/theme";
+import { cn } from "@/lib/cn";
 
 export function OverviewPage() {
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export function OverviewPage() {
         {volume && <CapacityCard volume={volume} />}
         <ScanStatusBar lastCompletedAt={scanInfo?.last_completed_at ?? null} />
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <h3 className={cn("mb-3 text-xs font-semibold uppercase tracking-wider", text.muted)}>
             分类占用
           </h3>
           {categories && <CategoryGrid categories={categories} />}

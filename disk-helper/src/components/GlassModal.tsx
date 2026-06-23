@@ -1,5 +1,6 @@
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 
 export function GlassModal({
   open,
@@ -27,12 +28,12 @@ export function GlassModal({
         <h3
           className={cn(
             "text-lg font-semibold tracking-tight",
-            danger ? "text-red-600 dark:text-red-400" : "text-zinc-900 dark:text-zinc-50",
+            danger ? "text-red-600 dark:text-red-400" : text.primary,
           )}
         >
           {title}
         </h3>
-        <div className="mt-4">{children}</div>
+        <div className={cn("mt-4", text.body)}>{children}</div>
       </div>
     </div>
   );

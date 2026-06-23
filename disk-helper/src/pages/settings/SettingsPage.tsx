@@ -7,6 +7,7 @@ import { useToastStore } from "@/stores/app-store";
 import type { AppSettings } from "@/types";
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 import { PageHeader } from "@/components/PageHeader";
 import { Button, GlassInput } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -87,7 +88,7 @@ export function SettingsPage() {
             {tab === "ai" && merged && (
               <>
                 <div>
-                  <label className="text-sm font-medium">AI 模式</label>
+                  <label className={text.label}>AI 模式</label>
                   <div className="mt-3 flex gap-3">
                     {(["local", "cloud"] as const).map((mode) => (
                       <button
@@ -107,7 +108,7 @@ export function SettingsPage() {
                 {merged.ai_mode === "local" ? (
                   <>
                     <div>
-                      <label className="text-sm font-medium">Ollama 地址</label>
+                      <label className={text.label}>Ollama 地址</label>
                       <GlassInput
                         className="mt-2 w-full"
                         value={merged.ollama_base_url}
@@ -115,7 +116,7 @@ export function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">模型</label>
+                      <label className={text.label}>模型</label>
                       <GlassInput
                         className="mt-2 w-full opacity-70"
                         value={merged.ollama_model}
@@ -125,7 +126,7 @@ export function SettingsPage() {
                   </>
                 ) : (
                   <div>
-                    <label className="text-sm font-medium">API Key</label>
+                    <label className={text.label}>API Key</label>
                     <GlassInput
                       type="password"
                       className="mt-2 w-full"
@@ -140,12 +141,12 @@ export function SettingsPage() {
                 <Button variant="secondary" onClick={testConnection}>
                   测试连接
                 </Button>
-                {testResult && <p className="text-sm text-zinc-500">{testResult}</p>}
+                {testResult && <p className={cn("text-sm", text.muted)}>{testResult}</p>}
               </>
             )}
             {tab === "appearance" && (
               <div>
-                <label className="text-sm font-medium">界面主题</label>
+                <label className={text.label}>界面主题</label>
                 <div className="mt-3 flex gap-2">
                   {(["system", "light", "dark"] as const).map((t) => (
                     <button
@@ -166,7 +167,7 @@ export function SettingsPage() {
             {tab === "quarantine" && merged && (
               <>
                 <div>
-                  <label className="text-sm font-medium">隔离区路径</label>
+                  <label className={text.label}>隔离区路径</label>
                   <GlassInput
                     className="mt-2 w-full"
                     value={merged.quarantine_root}
@@ -174,7 +175,7 @@ export function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">保留天数</label>
+                  <label className={text.label}>保留天数</label>
                   <GlassInput
                     type="number"
                     className="mt-2 w-32"
@@ -186,7 +187,7 @@ export function SettingsPage() {
             )}
             {tab === "scan" && merged && (
               <>
-                <label className="flex items-center gap-2 text-sm">
+                <label className={cn("flex items-center gap-2 text-sm", text.secondary)}>
                   <input
                     type="checkbox"
                     checked={merged.admin_scan_enabled}
@@ -196,7 +197,7 @@ export function SettingsPage() {
                 </label>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium">警告阈值 (GB)</label>
+                    <label className={text.label}>警告阈值 (GB)</label>
                     <GlassInput
                       type="number"
                       className="mt-2 w-full"
@@ -205,7 +206,7 @@ export function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">严重阈值 (GB)</label>
+                    <label className={text.label}>严重阈值 (GB)</label>
                     <GlassInput
                       type="number"
                       className="mt-2 w-full"
@@ -218,7 +219,7 @@ export function SettingsPage() {
             )}
             {tab === "advanced" && merged && (
               <div>
-                <label className="text-sm font-medium">软删除默认目标</label>
+                <label className={text.label}>软删除默认目标</label>
                 <div className="mt-3 flex gap-2">
                   {(["quarantine", "recycle_bin"] as const).map((target) => (
                     <button

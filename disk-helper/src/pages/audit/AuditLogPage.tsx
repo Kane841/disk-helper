@@ -37,7 +37,7 @@ export function AuditLogPage() {
         <Card strong>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className={cn("text-left text-xs text-zinc-500", glass.tableHead)}>
+              <thead className={cn("text-left text-xs", glass.tableHead)}>
                 <tr>
                   <th className="px-4 py-3">时间</th>
                   <th className="px-4 py-3">类型</th>

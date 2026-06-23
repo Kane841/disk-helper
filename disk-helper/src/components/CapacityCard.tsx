@@ -1,5 +1,7 @@
 import type { VolumeInfo } from "@/types";
 import { formatBytes, formatPercent } from "@/lib/format";
+import { cn } from "@/lib/cn";
+import { text } from "@/lib/theme";
 import { Card, CardBody } from "@/components/ui/card";
 
 export function CapacityCard({ volume }: { volume: VolumeInfo }) {
@@ -11,22 +13,22 @@ export function CapacityCard({ volume }: { volume: VolumeInfo }) {
       <CardBody>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <p className={cn("text-xs font-semibold uppercase tracking-wider", text.muted)}>
               {volume.drive} 盘
             </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight">
+            <p className={cn("mt-2 text-3xl font-semibold tracking-tight", text.primary)}>
               {formatBytes(volume.free_bytes)}
-              <span className="ml-2 text-base font-normal text-zinc-500">可用</span>
+              <span className={cn("ml-2 text-base font-normal", text.muted)}>可用</span>
             </p>
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className={cn("mt-2 text-sm", text.muted)}>
               已用 {formatBytes(volume.used_bytes)} / 共 {formatBytes(volume.total_bytes)}
             </p>
           </div>
           <div className="rounded-2xl bg-white/40 px-4 py-3 text-right ring-1 ring-white/50 backdrop-blur-sm dark:bg-white/5 dark:ring-white/10">
-            <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
+            <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
               {formatPercent(volume.usage_percent)}
             </p>
-            <p className="text-xs text-zinc-500">使用率</p>
+            <p className={cn("text-xs", text.muted)}>使用率</p>
           </div>
         </div>
         <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-white/40 ring-1 ring-white/30 dark:bg-white/5 dark:ring-white/10">

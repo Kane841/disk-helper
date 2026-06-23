@@ -5,6 +5,7 @@ import { useToastStore } from "@/stores/app-store";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 import { GlassModal } from "@/components/GlassModal";
 import { PageHeader } from "@/components/PageHeader";
 import { RiskBadge } from "@/components/RiskBadge";
@@ -88,12 +89,12 @@ export function QuarantinePage() {
         <Card strong>
           <CardBody className="p-0">
             {items.length === 0 ? (
-              <p className="p-12 text-center text-sm text-zinc-500">
+              <p className={cn("p-12 text-center text-sm", text.muted)}>
                 隔离区为空，清理的文件将显示在这里
               </p>
             ) : (
               <table className="w-full text-sm">
-                <thead className={cn("text-left text-xs text-zinc-500", glass.tableHead)}>
+                <thead className={cn("text-left text-xs", glass.tableHead)}>
                   <tr>
                     <th className="w-10 px-4 py-3" />
                     <th className="px-4 py-3">原路径</th>
@@ -139,7 +140,7 @@ export function QuarantinePage() {
         title="永久删除"
         danger
       >
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">此操作不可恢复</p>
+        <p className={cn("text-sm", text.secondary)}>此操作不可恢复</p>
         <GlassInput
           className="mt-3 w-full"
           placeholder="输入「永久删除」"

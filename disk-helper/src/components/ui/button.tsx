@@ -5,9 +5,9 @@ const variants = {
   default:
     "bg-emerald-600/90 text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-600 backdrop-blur-md border border-emerald-400/30",
   secondary:
-    "glass-panel text-zinc-800 hover:bg-white/65 dark:text-zinc-100 dark:hover:bg-white/10 border-0",
+    "glass-panel text-zinc-800 hover:bg-white/65 dark:text-zinc-100 dark:hover:bg-white/12 dark:ring-1 dark:ring-white/10 border-0",
   ghost:
-    "text-zinc-700 hover:bg-white/40 dark:text-zinc-300 dark:hover:bg-white/5 backdrop-blur-sm",
+    "text-zinc-700 hover:bg-white/40 dark:text-zinc-200 dark:hover:bg-white/8 dark:hover:text-zinc-50 backdrop-blur-sm",
   danger:
     "bg-red-500/90 text-white shadow-lg shadow-red-500/25 hover:bg-red-600 backdrop-blur-md border border-red-400/30",
 };

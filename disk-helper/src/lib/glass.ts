@@ -8,11 +8,11 @@ export const glass = {
   input: "glass-input rounded-xl text-zinc-900 placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500",
   overlay: "glass-overlay",
   divider: "glass-divider",
-  tableHead: "glass-table-head",
+  tableHead: "glass-table-head text-zinc-500 dark:text-zinc-300",
   navActive:
-    "glass-nav-active text-emerald-800 ring-1 ring-white/50 dark:text-emerald-300 dark:ring-white/10",
+    "glass-nav-active text-emerald-800 ring-1 ring-white/50 dark:text-emerald-100 dark:ring-white/10",
   navIdle:
-    "text-zinc-600 hover:bg-white/35 dark:text-zinc-400 dark:hover:bg-white/5",
+    "text-zinc-600 hover:bg-white/35 hover:text-zinc-900 dark:text-zinc-200 dark:hover:bg-white/8 dark:hover:text-zinc-50",
 } as const;
 
 export function glassCn(...classes: (string | false | undefined | null)[]) {

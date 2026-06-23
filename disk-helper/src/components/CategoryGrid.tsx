@@ -3,6 +3,7 @@ import type { CategoryStat } from "@/types";
 import { CATEGORY_LABELS, formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 
 export function CategoryGrid({ categories }: { categories: CategoryStat[] }) {
   const navigate = useNavigate();
@@ -20,19 +21,19 @@ export function CategoryGrid({ categories }: { categories: CategoryStat[] }) {
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
+            <span className={cn("text-sm font-medium", text.primary)}>
               {CATEGORY_LABELS[cat.code] ?? cat.code}
             </span>
-            <span className="text-xs text-zinc-500">{(cat.ratio * 100).toFixed(0)}%</span>
+            <span className={cn("text-xs", text.muted)}>{(cat.ratio * 100).toFixed(0)}%</span>
           </div>
-          <p className="mt-2 text-lg font-semibold">{formatBytes(cat.size_bytes)}</p>
+          <p className={cn("mt-2 text-lg font-semibold", text.primary)}>{formatBytes(cat.size_bytes)}</p>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/40 dark:bg-white/5">
             <div
               className="h-full rounded-full bg-gradient-to-r from-emerald-500/80 to-teal-400/80"
               style={{ width: `${cat.ratio * 100}%` }}
             />
           </div>
-          <p className="mt-2 text-[11px] text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">
+          <p className={cn("mt-2 text-[11px] opacity-0 transition-opacity group-hover:opacity-100", text.faint)}>
             点击查看详情 →
           </p>
         </button>

@@ -7,6 +7,7 @@ import type { CleanupSuggestion, RiskLevel } from "@/types";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
+import { text } from "@/lib/theme";
 import { GlassModal } from "@/components/GlassModal";
 import { PageHeader } from "@/components/PageHeader";
 import { RiskBadge } from "@/components/RiskBadge";
@@ -101,7 +102,7 @@ export function CleanupPage() {
             value={pathKeyword}
             onChange={(e) => setPathKeyword(e.target.value)}
           />
-          <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <label className={cn("flex items-center gap-2 text-sm", text.secondary)}>
             <input
               type="checkbox"
               checked={dangerUnlocked}
@@ -144,7 +145,7 @@ export function CleanupPage() {
         <Card strong>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className={cn("text-left text-xs text-zinc-500", glass.tableHead)}>
+              <thead className={cn("text-left text-xs", glass.tableHead)}>
                 <tr>
                   <th className="w-10 px-4 py-3" />
                   <th className="px-4 py-3">路径</th>
@@ -174,7 +175,7 @@ export function CleanupPage() {
                     <td className="px-4 py-3">
                       <RiskBadge risk={item.risk} />
                     </td>
-                    <td className="max-w-xs px-4 py-3 text-zinc-500">{item.description}</td>
+                    <td className={cn("max-w-xs px-4 py-3", text.muted)}>{item.description}</td>
                   </tr>
                 ))}
               </tbody>
@@ -187,12 +188,12 @@ export function CleanupPage() {
         onClose={() => setConfirmOpen(false)}
         title="确认清理"
       >
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className={cn("text-sm", text.secondary)}>
           将 {selected.size} 项移入隔离区，约 {formatBytes(selectedSize)}
         </p>
         {hasDangerSelected && (
           <>
-            <p className="mt-3 text-sm text-red-600">包含危险项，请输入「确认清理」</p>
+            <p className="mt-3 text-sm text-red-600 dark:text-red-400">包含危险项，请输入「确认清理」</p>
             <GlassInput
               className="mt-2 w-full"
               value={confirmText}

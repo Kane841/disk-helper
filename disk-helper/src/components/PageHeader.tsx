@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { text } from "@/lib/theme";
 
 export function PageHeader({
   title,
@@ -20,11 +21,11 @@ export function PageHeader({
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h2 className={cn("text-xl font-semibold tracking-tight", text.primary)}>
             {title}
           </h2>
           {description && (
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
+            <p className={cn("mt-1 text-sm", text.secondary)}>{description}</p>
           )}
         </div>
         {children}
