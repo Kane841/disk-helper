@@ -1,14 +1,38 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+mod commands;
+mod db;
+mod error;
+mod models;
+mod services;
+mod state;
+
+use state::AppState;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .setup(|app| {
+            let app_state = AppState::new().map_err(|err| {
+                eprintln!("Failed to initialize application state: {err}");
+                err.to_string()
+            })?;
+            app.manage(app_state);
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            commands::volume::volume_get_c_drive,
+            commands::scan::scan_start,
+            commands::scan::scan_pause,
+            commands::scan::scan_resume,
+            commands::scan::scan_cancel,
+            commands::scan::scan_get_status,
+            commands::index::index_get_category_stats,
+            commands::index::index_get_children,
+            commands::index::index_search,
+            commands::index::index_get_top_files,
+            commands::index::index_get_top_folders,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
