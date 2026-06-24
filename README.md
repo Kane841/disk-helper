@@ -41,12 +41,12 @@ npm run tauri dev                               # 桌面窗口
 | M1 | ✅ | UI 原型（Mock 数据 + 毛玻璃界面） |
 | M2 | ✅ | Tauri IPC 包络、AppState、SQLite 六表迁移 |
 | M3 | ✅ | C 盘容量、全量/增量扫描、IndexService、Explorer 真数据 |
-| M4 | ⏳ | 规则引擎 + 安全清理 + 隔离区 |
+| M4 | ✅ | 规则引擎 + 安全清理 + 隔离区 + 审计日志 |
 | M5 | ⏳ | 双通道 AI（Ollama / DeepSeek） |
 | M6 | ⏳ | 收尾验收与打包 |
 
 **桌面版验证：** `cd disk-helper && npm run tauri dev`（`.env.tauri` → 真实 IPC）  
-**测试：** `cd disk-helper/src-tauri && cargo test`（10 项通过）
+**测试：** `cd disk-helper/src-tauri && cargo test`（15 项通过）
 
 实现计划：[`docs/superpowers/plans/2026-06-22-disk-helper-v1.md`](docs/superpowers/plans/2026-06-22-disk-helper-v1.md)
 
