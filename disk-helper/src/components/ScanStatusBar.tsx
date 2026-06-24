@@ -107,6 +107,7 @@ export function ScanStatusBar({ lastCompletedAt }: ScanStatusBarProps) {
           queryClient.invalidateQueries({ queryKey: ["index-children"] });
           queryClient.invalidateQueries({ queryKey: ["top-files"] });
           queryClient.invalidateQueries({ queryKey: ["top-folders"] });
+          queryClient.invalidateQueries({ queryKey: ["suggestions"] });
         }),
       );
     })();

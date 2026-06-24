@@ -131,13 +131,19 @@ export const mockApi = {
     return [...quarantineItems];
   },
 
-  async quarantineRestore(ids: string[]): Promise<{ restored: number }> {
+  async quarantineRestore(ids: string[]): Promise<{
+    restored: number;
+    failed?: { id: string; reason: string }[];
+  }> {
     await delay(400);
     quarantineItems = quarantineItems.filter((i) => !ids.includes(i.id));
     return { restored: ids.length };
   },
 
-  async quarantinePurge(ids: string[]): Promise<{ purged_count: number }> {
+  async quarantinePurge(ids: string[], confirmText: string): Promise<{ purged_count: number }> {
+    if (confirmText !== "永久删除") {
+      throw new Error("请输入「永久删除」以继续");
+    }
     await delay(400);
     quarantineItems = quarantineItems.filter((i) => !ids.includes(i.id));
     return { purged_count: ids.length };
@@ -146,6 +152,50 @@ export const mockApi = {
   async auditList(): Promise<AuditLogItem[]> {
     await delay();
     return [...auditLogs];
+  },
+
+  async auditExport(_format: "json" | "txt" = "json"): Promise<{ file_path: string }> {
+    await delay(300);
+    return { file_path: "mock-audit-export.txt" };
+  },
+
+  async auditClear(_confirmed = true): Promise<{ deleted: number }> {
+    await delay(200);
+    const count = auditLogs.length;
+    auditLogs = [];
+    return { deleted: count };
+  },
+
+  async cleanupExecute(params: {
+    items: { path: string }[];
+    target?: "quarantine" | "recycle_bin";
+    dangerConfirmToken?: string;
+  }): Promise<{ success_count: number; failed: { path: string; reason: string }[] }> {
+    await delay(400);
+    const paths = params.items.map((item) => item.path);
+    for (const path of paths) {
+      const sug = mockSuggestions.find((s) => s.path === path);
+      if (!sug) continue;
+      quarantineItems.unshift({
+        id: `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        original_path: path,
+        quarantine_path: `${settings.quarantine_root}\\${new Date().toISOString().slice(0, 10)}\\...`,
+        size_bytes: sug.size_bytes,
+        moved_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + settings.retention_days * 86400000).toISOString(),
+        status: "active",
+        risk: sug.risk,
+      });
+      auditLogs.unshift({
+        id: `log-${Date.now()}`,
+        occurred_at: new Date().toISOString(),
+        event_type: "soft_delete",
+        summary: `移入隔离区：${path}`,
+        result: "success",
+        related_path: path,
+      });
+    }
+    return { success_count: paths.length, failed: [] };
   },
 
   async configGet(): Promise<AppSettings> {

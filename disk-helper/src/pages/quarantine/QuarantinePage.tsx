@@ -46,11 +46,19 @@ export function QuarantinePage() {
       showToast("请先勾选项目");
       return;
     }
-    const count = selected.size;
-    await api.quarantineRestore(Array.from(selected));
-    setSelected(new Set());
-    queryClient.invalidateQueries({ queryKey: ["quarantine"] });
-    showToast(`已还原 ${count} 项（模拟）`);
+    try {
+      const result = await api.quarantineRestore(Array.from(selected));
+      setSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ["quarantine"] });
+      queryClient.invalidateQueries({ queryKey: ["audit"] });
+      if (result.failed && result.failed.length > 0) {
+        showToast(`已还原 ${result.restored} 项，${result.failed.length} 项失败`);
+      } else {
+        showToast(`已还原 ${result.restored} 项`);
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "还原失败");
+    }
   };
 
   const handlePurge = async () => {
@@ -58,12 +66,17 @@ export function QuarantinePage() {
       showToast("请输入「永久删除」以继续");
       return;
     }
-    await api.quarantinePurge(Array.from(selected));
-    setSelected(new Set());
-    setPurgeOpen(false);
-    setPurgeText("");
-    queryClient.invalidateQueries({ queryKey: ["quarantine"] });
-    showToast("已永久删除（模拟）");
+    try {
+      const result = await api.quarantinePurge(Array.from(selected), purgeText);
+      setSelected(new Set());
+      setPurgeOpen(false);
+      setPurgeText("");
+      queryClient.invalidateQueries({ queryKey: ["quarantine"] });
+      queryClient.invalidateQueries({ queryKey: ["audit"] });
+      showToast(`已永久删除 ${result.purged_count} 项`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "删除失败");
+    }
   };
 
   return (

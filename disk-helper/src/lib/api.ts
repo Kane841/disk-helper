@@ -1,6 +1,14 @@
 import { mockApi } from "@/mocks/mock-api";
 import { invokeApi } from "@/lib/tauri-client";
-import type { FileNode, ScanStatus, SpaceCategory, VolumeInfo } from "@/types";
+import type {
+  AuditLogItem,
+  CleanupSuggestion,
+  FileNode,
+  QuarantineItem,
+  ScanStatus,
+  SpaceCategory,
+  VolumeInfo,
+} from "@/types";
 
 export const useMockApi = import.meta.env.VITE_USE_MOCK !== "false";
 
@@ -74,6 +82,75 @@ const tauriIpcApi = {
       limit,
     });
     return resp.items;
+  },
+
+  async rulesGetSuggestions(filters?: {
+    risk?: string;
+    category?: string;
+    path_keyword?: string;
+    page?: number;
+    size?: number;
+  }): Promise<{ items: CleanupSuggestion[]; releasable_bytes: number; total?: number }> {
+    return invokeApi("rules_get_suggestions", {
+      riskFilter: filters?.risk,
+      categoryFilter: filters?.category,
+      pathKeyword: filters?.path_keyword,
+      page: filters?.page,
+      size: filters?.size,
+    });
+  },
+
+  async cleanupExecute(params: {
+    items: { path: string }[];
+    target?: "quarantine" | "recycle_bin";
+    dangerConfirmToken?: string;
+  }): Promise<{ success_count: number; failed: { path: string; reason: string }[] }> {
+    return invokeApi("cleanup_execute", {
+      items: params.items,
+      target: params.target ?? "quarantine",
+      dangerConfirmToken: params.dangerConfirmToken,
+    });
+  },
+
+  async quarantineList(keyword?: string): Promise<QuarantineItem[]> {
+    const resp = await invokeApi<{ items: QuarantineItem[] }>("quarantine_list", {
+      keyword,
+    });
+    return resp.items;
+  },
+
+  async quarantineRestore(
+    ids: string[],
+    conflictStrategy?: "overwrite" | "alternate",
+  ): Promise<{ restored: number; failed?: { id: string; reason: string }[] }> {
+    return invokeApi("quarantine_restore", { ids, conflictStrategy });
+  },
+
+  async quarantinePurge(ids: string[], confirmText: string): Promise<{ purged_count: number }> {
+    return invokeApi("quarantine_purge", { ids, confirmText });
+  },
+
+  async auditList(params?: {
+    eventType?: string;
+    keyword?: string;
+    page?: number;
+    size?: number;
+  }): Promise<AuditLogItem[]> {
+    const resp = await invokeApi<{ items: AuditLogItem[] }>("audit_list", {
+      eventType: params?.eventType,
+      keyword: params?.keyword,
+      page: params?.page,
+      size: params?.size,
+    });
+    return resp.items;
+  },
+
+  async auditExport(format: "json" | "txt" = "json", limit = 200): Promise<{ file_path: string }> {
+    return invokeApi("audit_export", { format, limit });
+  },
+
+  async auditClear(confirmed = true): Promise<{ deleted: number }> {
+    return invokeApi("audit_clear", { confirmed });
   },
 };
 

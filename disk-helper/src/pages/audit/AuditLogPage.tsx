@@ -30,7 +30,14 @@ export function AuditLogPage() {
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => showToast("诊断摘要已导出（模拟）")}
+          onClick={async () => {
+            try {
+              const result = await api.auditExport("txt");
+              showToast(`诊断摘要已导出：${result.file_path}`);
+            } catch (error) {
+              showToast(error instanceof Error ? error.message : "导出失败");
+            }
+          }}
         >
           导出诊断摘要
         </Button>

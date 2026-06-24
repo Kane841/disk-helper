@@ -61,19 +61,35 @@ export function CleanupPage() {
     (i) => selected.has(i.path) && i.risk === "danger",
   );
 
-  const executeCleanup = () => {
+  const executeCleanup = async () => {
     if (hasDangerSelected && confirmText !== "确认清理") {
       showToast("请输入「确认清理」以继续");
       return;
     }
     const paths = Array.from(selected);
-    api.addQuarantineFromCleanup(paths);
-    setSelected(new Set());
-    setConfirmOpen(false);
-    setConfirmText("");
-    queryClient.invalidateQueries({ queryKey: ["quarantine"] });
-    queryClient.invalidateQueries({ queryKey: ["audit"] });
-    showToast(`已模拟移入隔离区 ${paths.length} 项，释放约 ${formatBytes(selectedSize)}`);
+    try {
+      const result = await api.cleanupExecute({
+        items: paths.map((path) => ({ path })),
+        target: "quarantine",
+        dangerConfirmToken: hasDangerSelected ? confirmText : undefined,
+      });
+      setSelected(new Set());
+      setConfirmOpen(false);
+      setConfirmText("");
+      queryClient.invalidateQueries({ queryKey: ["quarantine"] });
+      queryClient.invalidateQueries({ queryKey: ["audit"] });
+      queryClient.invalidateQueries({ queryKey: ["suggestions"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      if (result.failed.length > 0) {
+        showToast(
+          `完成 ${result.success_count} 项，${result.failed.length} 项失败：${result.failed[0]?.reason ?? ""}`,
+        );
+      } else {
+        showToast(`已移入隔离区 ${result.success_count} 项，释放约 ${formatBytes(selectedSize)}`);
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "清理失败");
+    }
   };
 
   return (
