@@ -13,7 +13,13 @@ pub enum ErrorCode {
     QuarantineConflict,
     DiskSpaceInsufficient,
     AiNoApiKey,
+    AiInvalidKey,
     AiNetworkError,
+    AiRateLimit,
+    AiTimeout,
+    AiProviderError,
+    AiOllamaUnavailable,
+    AiModelNotFound,
     InternalError,
 }
 

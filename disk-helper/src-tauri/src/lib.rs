@@ -40,6 +40,10 @@ pub fn run() {
             commands::audit::audit_list,
             commands::audit::audit_export,
             commands::audit::audit_clear,
+            commands::config::config_get,
+            commands::config::config_save,
+            commands::ai::ai_chat,
+            commands::ai::ai_test_connection,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

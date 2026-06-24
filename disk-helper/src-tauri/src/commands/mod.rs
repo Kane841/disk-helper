@@ -5,3 +5,5 @@ pub mod rules;
 pub mod quarantine;
 pub mod cleanup;
 pub mod audit;
+pub mod ai;
+pub mod config;
