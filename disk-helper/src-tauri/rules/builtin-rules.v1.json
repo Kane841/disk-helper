@@ -1,0 +1,95 @@
+{
+  "version": "1.0.0",
+  "category_rules": [],
+  "cleanup_rules": [
+    {
+      "id": "win_temp",
+      "name": "Windows 临时文件",
+      "category": "temp",
+      "risk": "safe",
+      "path_globs": ["C:\\Windows\\Temp\\**"],
+      "min_age_days": 7,
+      "description": "系统临时文件，清理后通常可自动重建",
+      "restore_hint": "可从隔离区还原；系统会重新创建临时文件"
+    },
+    {
+      "id": "user_temp",
+      "name": "用户临时文件",
+      "category": "temp",
+      "risk": "safe",
+      "path_globs": ["C:\\Users\\{user}\\AppData\\Local\\Temp\\**"],
+      "min_age_days": 3,
+      "description": "用户 Temp 目录中的临时文件",
+      "restore_hint": "可从隔离区还原"
+    },
+    {
+      "id": "recycle_bin",
+      "name": "回收站",
+      "category": "recycle",
+      "risk": "safe",
+      "path_globs": ["C:\\$Recycle.Bin\\**"],
+      "min_age_days": 0,
+      "description": "系统回收站内容",
+      "restore_hint": "清空前请确认回收站无需要的文件"
+    },
+    {
+      "id": "chrome_cache",
+      "name": "Chrome 缓存",
+      "category": "browser_cache",
+      "risk": "safe",
+      "path_globs": [
+        "C:\\Users\\{user}\\AppData\\Local\\Google\\Chrome\\User Data\\*\\Cache\\**"
+      ],
+      "min_age_days": 7,
+      "description": "Chrome 浏览器缓存",
+      "restore_hint": "可从隔离区还原；浏览器会重建缓存"
+    },
+    {
+      "id": "edge_cache",
+      "name": "Edge 缓存",
+      "category": "browser_cache",
+      "risk": "safe",
+      "path_globs": [
+        "C:\\Users\\{user}\\AppData\\Local\\Microsoft\\Edge\\User Data\\*\\Cache\\**"
+      ],
+      "min_age_days": 7,
+      "description": "Microsoft Edge 浏览器缓存",
+      "restore_hint": "可从隔离区还原；浏览器会重建缓存"
+    },
+    {
+      "id": "download_stale_90d",
+      "name": "陈旧下载",
+      "category": "download_stale",
+      "risk": "caution",
+      "path_globs": ["C:\\Users\\{user}\\Downloads\\**"],
+      "min_age_days": 90,
+      "description": "下载目录中超过 90 天未修改的文件",
+      "restore_hint": "可从隔离区还原"
+    },
+    {
+      "id": "npm_cache",
+      "name": "npm 缓存",
+      "category": "app_cache",
+      "risk": "caution",
+      "path_globs": ["C:\\Users\\{user}\\AppData\\Local\\npm-cache\\**"],
+      "min_age_days": 0,
+      "description": "npm 包缓存，删除后下次安装会重新下载",
+      "restore_hint": "可从隔离区还原"
+    },
+    {
+      "id": "windows_dir",
+      "name": "Windows 系统目录",
+      "category": "other",
+      "risk": "danger",
+      "path_globs": ["C:\\Windows\\**"],
+      "min_age_days": 0,
+      "description": "Windows 系统目录（非 Temp），误删可能导致系统异常",
+      "restore_hint": "强烈不建议清理；可从隔离区尝试还原",
+      "exclude_globs": ["C:\\Windows\\Temp\\**"]
+    }
+  ],
+  "danger_paths": [
+    "C:\\Windows\\System32\\**",
+    "C:\\Windows\\SysWOW64\\**"
+  ]
+}

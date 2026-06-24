@@ -32,6 +32,14 @@ pub fn run() {
             commands::index::index_search,
             commands::index::index_get_top_files,
             commands::index::index_get_top_folders,
+            commands::rules::rules_get_suggestions,
+            commands::quarantine::quarantine_list,
+            commands::quarantine::quarantine_restore,
+            commands::quarantine::quarantine_purge,
+            commands::cleanup::cleanup_execute,
+            commands::audit::audit_list,
+            commands::audit::audit_export,
+            commands::audit::audit_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

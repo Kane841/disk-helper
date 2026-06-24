@@ -62,7 +62,7 @@ pub struct ScanCallbacks {
 pub fn scan_root() -> PathBuf {
     std::env::var("SCAN_ROOT")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from(r"C:\\"))
+        .unwrap_or_else(|_| PathBuf::from(r"C:\"))
 }
 
 pub fn last_completed_at(conn: &Connection) -> Result<Option<String>, AppError> {
@@ -394,8 +394,16 @@ fn progress_percent(scanned_files: u64) -> u32 {
     ((scanned_files.min(9_900) as f64 / 10_000.0) * 99.0).round() as u32
 }
 
+pub(crate) fn normalize_windows_path(path: &str) -> String {
+    let mut normalized = path.replace('/', "\\");
+    while normalized.contains("\\\\") {
+        normalized = normalized.replace("\\\\", "\\");
+    }
+    normalized
+}
+
 pub(crate) fn path_to_string(path: &Path) -> String {
-    path.to_string_lossy().replace('/', "\\")
+    normalize_windows_path(&path.to_string_lossy())
 }
 
 pub(crate) fn parent_path(path: &Path) -> String {

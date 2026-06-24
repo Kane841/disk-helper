@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 pub mod index;
+pub mod cleanup;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct VolumeInfo {

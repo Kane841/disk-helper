@@ -1,3 +1,7 @@
 pub mod volume;
 pub mod scan;
 pub mod index;
+pub mod rules;
+pub mod quarantine;
+pub mod cleanup;
+pub mod audit;

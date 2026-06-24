@@ -2,7 +2,7 @@ use serde::Serialize;
 
 #[allow(dead_code)] // M2 skeleton — error codes used by later command handlers
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "PascalCase")]
 pub enum ErrorCode {
     BadArgument,

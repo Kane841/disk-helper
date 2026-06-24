@@ -2,6 +2,7 @@ use rusqlite::{params, Connection, OptionalExtension, Row};
 
 use crate::error::{err, AppError, ErrorCode};
 use crate::models::index::{CategoryStat, FileNode};
+use crate::services::scan::engine::normalize_windows_path;
 
 const ALL_CATEGORIES: [&str; 6] = [
     "system",
@@ -12,7 +13,7 @@ const ALL_CATEGORIES: [&str; 6] = [
     "other",
 ];
 
-const DEFAULT_SCOPE: &str = r"C:\\";
+const DEFAULT_SCOPE: &str = r"C:\";
 const MAX_FOLDER_DEPTH: usize = 64;
 
 pub fn index_ready(conn: &Connection) -> Result<bool, AppError> {
@@ -213,7 +214,7 @@ fn ensure_index_ready(conn: &Connection) -> Result<(), AppError> {
 }
 
 fn classify_path(path: &str) -> &'static str {
-    let normalized = path.replace('/', "\\");
+    let normalized = normalize_windows_path(path);
     let upper = normalized.to_ascii_uppercase();
 
     if upper.starts_with(r"C:\WINDOWS\") || upper == r"C:\WINDOWS" {
@@ -240,12 +241,12 @@ fn classify_path(path: &str) -> &'static str {
 }
 
 fn normalize_path(path: &str) -> String {
-    let mut normalized = path.replace('/', "\\");
+    let mut normalized = normalize_windows_path(path);
     if normalized.len() == 2 && normalized.ends_with(':') {
         normalized.push('\\');
     }
     if normalized == "C:" {
-        normalized = r"C:\\".into();
+        normalized = r"C:\".into();
     }
     normalized
 }
