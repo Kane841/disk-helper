@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { api } from "@/lib/api";
+import { TauriApiError } from "@/lib/tauri-client";
 import { useToastStore } from "@/stores/app-store";
 import type { AppSettings } from "@/types";
 import { cn } from "@/lib/cn";
@@ -35,18 +36,34 @@ export function SettingsPage() {
   };
 
   const save = async () => {
-    await api.configSave({
-      ...draft,
-      has_api_key: apiKey.length > 0 ? true : settings?.has_api_key,
-    });
-    setDraft({});
-    queryClient.invalidateQueries({ queryKey: ["settings"] });
-    showToast("设置已保存（模拟）");
+    try {
+      await api.configSave({
+        ...draft,
+        api_key: apiKey.trim() || undefined,
+      });
+      setDraft({});
+      setApiKey("");
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      showToast("设置已保存");
+    } catch (error) {
+      const message =
+        error instanceof TauriApiError ? error.message : "保存设置失败";
+      showToast(message);
+    }
   };
 
   const testConnection = async () => {
-    const res = await api.aiTestConnection();
-    setTestResult(res.message);
+    try {
+      const res = await api.aiTestConnection({
+        ai_mode: merged?.ai_mode,
+        api_key: apiKey.trim() || undefined,
+      });
+      setTestResult(res.message);
+    } catch (error) {
+      const message =
+        error instanceof TauriApiError ? error.message : "连接测试失败";
+      setTestResult(message);
+    }
   };
 
   const tabs: { id: Tab; label: string }[] = [

@@ -28,7 +28,14 @@ export async function invokeApi<T>(
   command: string,
   args?: Record<string, unknown>,
 ): Promise<T> {
-  const response = await invoke<ApiResponse<T>>(command, args ?? {});
+  let response: ApiResponse<T>;
+  try {
+    response = await invoke<ApiResponse<T>>(command, args ?? {});
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "IPC 调用失败";
+    throw new TauriApiError({ code: "InternalError", message });
+  }
   if (response.error) {
     throw new TauriApiError(response.error);
   }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelectionStore, useToastStore } from "@/stores/app-store";
 import { api } from "@/lib/api";
-import { mockAiMessages } from "@/mocks/fixtures";
+import { TauriApiError } from "@/lib/tauri-client";
 import type { ChatMessage } from "@/types";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -14,7 +14,7 @@ import { Button, GlassInput } from "@/components/ui/button";
 export function AnalysisPage() {
   const { items, source, clear } = useSelectionStore();
   const showToast = useToastStore((s) => s.show);
-  const [messages, setMessages] = useState<ChatMessage[]>(mockAiMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -44,6 +44,10 @@ export function AnalysisPage() {
           sent_at: new Date().toISOString(),
         },
       ]);
+    } catch (error) {
+      const message =
+        error instanceof TauriApiError ? error.message : "AI 请求失败，请稍后重试";
+      showToast(message);
     } finally {
       setLoading(false);
     }
@@ -85,10 +89,15 @@ export function AnalysisPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <PageHeader
           title="AI 智能分析"
-          description="云端 DeepSeek / 本地 Ollama（Mock 回复）"
+          description="云端 DeepSeek / 本地 Ollama"
         />
         <div className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-2xl space-y-4">
+            {messages.length === 0 && !loading && (
+              <p className={cn("text-center text-sm", text.muted)}>
+                输入问题，或从浏览/清理页带入上下文后提问
+              </p>
+            )}
             {messages.map((msg) => (
               <div
                 key={msg.id}
