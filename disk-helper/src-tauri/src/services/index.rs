@@ -199,6 +199,22 @@ pub fn get_top_folders(
     rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite_err)
 }
 
+/// Wipe scan index tables. Does not touch quarantine or audit data.
+pub fn clear(conn: &Connection) -> Result<u64, AppError> {
+    let deleted: i64 = conn
+        .query_row("SELECT COUNT(*) FROM file_entry", [], |row| row.get(0))
+        .map_err(map_sqlite_err)?;
+
+    conn.execute("DELETE FROM file_entry", [])
+        .map_err(map_sqlite_err)?;
+    conn.execute("DELETE FROM scan_skip", [])
+        .map_err(map_sqlite_err)?;
+    conn.execute("DELETE FROM scan_run", [])
+        .map_err(map_sqlite_err)?;
+
+    Ok(deleted as u64)
+}
+
 fn ensure_index_ready(conn: &Connection) -> Result<(), AppError> {
     if index_ready(conn)? {
         Ok(())
@@ -333,6 +349,18 @@ mod tests {
         for pair in files.windows(2) {
             assert!(pair[0].size_bytes >= pair[1].size_bytes);
         }
+    }
+
+    #[test]
+    fn clear_removes_index_tables() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        scan_fixture(&fixture_root(), temp.path()).expect("scan");
+        let conn = crate::db::open(temp.path()).expect("db");
+        assert!(index_ready(&conn).expect("ready"));
+
+        let deleted = clear(&conn).expect("clear");
+        assert!(deleted > 0);
+        assert!(!index_ready(&conn).expect("check"));
     }
 
     #[test]

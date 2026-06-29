@@ -11,8 +11,8 @@ use uuid::Uuid;
 use crate::error::{err, AppError, ErrorCode};
 
 use super::engine::{
-    run_full_scan_worker, scan_root, ScanCallbacks, ScanCompletedEvent, ScanProgressEvent,
-    ScanSnapshot,
+    last_completed_scanned_files, run_full_scan_worker, scan_root, ScanCallbacks, ScanCompletedEvent,
+    ScanProgressEvent, ScanSnapshot,
 };
 use super::incremental::run_incremental_scan_worker;
 
@@ -71,6 +71,11 @@ impl ScanController {
                 .map_err(|e| err(ErrorCode::InternalError, e.to_string()).with_target("scan"))?;
         }
 
+        let estimated_total = {
+            let conn = db.lock().expect("db lock");
+            last_completed_scanned_files(&conn).unwrap_or(0)
+        };
+
         {
             let mut snap = self.snapshot.lock().expect("scan snapshot lock");
             snap.scan_run_id = Some(scan_run_id.clone());
@@ -78,6 +83,7 @@ impl ScanController {
             snap.progress_percent = 0;
             snap.scanned_files = 0;
             snap.skipped_files = 0;
+            snap.estimated_total_files = estimated_total;
         }
 
         let data_dir = data_dir.to_path_buf();
@@ -161,6 +167,17 @@ impl ScanController {
             .map_err(|e| err(ErrorCode::InternalError, e.to_string()).with_target("scan"))?;
         }
 
+        let estimated_total = {
+            let conn = db.lock().expect("db lock");
+            conn.query_row(
+                "SELECT COUNT(*) FROM file_entry WHERE is_dir = 0",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .map(|count| count.max(0) as u64)
+            .unwrap_or(0)
+        };
+
         {
             let mut snap = self.snapshot.lock().expect("scan snapshot lock");
             snap.scan_run_id = Some(scan_run_id.clone());
@@ -168,6 +185,7 @@ impl ScanController {
             snap.progress_percent = 0;
             snap.scanned_files = 0;
             snap.skipped_files = 0;
+            snap.estimated_total_files = estimated_total;
         }
 
         let data_dir = data_dir.to_path_buf();

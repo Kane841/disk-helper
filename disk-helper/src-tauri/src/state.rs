@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use rusqlite::Connection;
 
 use crate::db::{self, DbError};
+use crate::services::rules::SuggestionsCacheState;
 use crate::services::scan::ScanController;
 
 /// Shared application state managed by Tauri (DB + data directory).
@@ -11,6 +12,7 @@ pub struct AppState {
     pub db: Mutex<Connection>,
     pub data_dir: PathBuf,
     pub scan: ScanController,
+    pub suggestions_cache: Mutex<Option<SuggestionsCacheState>>,
 }
 
 impl AppState {
@@ -21,6 +23,7 @@ impl AppState {
             db: Mutex::new(conn),
             data_dir,
             scan: ScanController::new(),
+            suggestions_cache: Mutex::new(None),
         })
     }
 
@@ -31,6 +34,7 @@ impl AppState {
             db: Mutex::new(conn),
             data_dir: dir.to_path_buf(),
             scan: ScanController::new(),
+            suggestions_cache: Mutex::new(None),
         })
     }
 }

@@ -32,6 +32,7 @@ pub fn run() {
             commands::index::index_search,
             commands::index::index_get_top_files,
             commands::index::index_get_top_folders,
+            commands::index::index_clear,
             commands::rules::rules_get_suggestions,
             commands::quarantine::quarantine_list,
             commands::quarantine::quarantine_restore,

@@ -23,15 +23,16 @@ pub fn rules_get_suggestions(
     size: Option<u32>,
 ) -> ApiResponse<SuggestionsResponse> {
     let conn = state.db.lock().expect("db lock");
+    let mut cache = state.suggestions_cache.lock().expect("suggestions cache lock");
     let filters = SuggestionFilters {
         risk_filter: risk_filter.as_deref(),
         category_filter: category_filter.as_deref(),
         path_keyword: path_keyword.as_deref(),
         page: page.unwrap_or(1),
-        size: size.unwrap_or(100),
+        size: size.unwrap_or(50),
     };
 
-    match rules::get_suggestions(&conn, filters) {
+    match rules::get_suggestions(&conn, filters, &mut cache) {
         Ok(result) => ApiResponse::ok(SuggestionsResponse {
             items: result.items,
             releasable_bytes: result.releasable_bytes,

@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use chrono::{DateTime, Duration, Utc};
 use globset::{Glob, GlobSet, GlobSetBuilder};
@@ -41,6 +42,7 @@ struct CompiledRule {
 pub struct RulesEngine {
     danger_paths: GlobSet,
     cleanup_rules: Vec<CompiledRule>,
+    path_like_prefixes: Vec<String>,
 }
 
 pub struct SuggestionFilters<'a> {
@@ -49,6 +51,17 @@ pub struct SuggestionFilters<'a> {
     pub path_keyword: Option<&'a str>,
     pub page: u32,
     pub size: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct SuggestionsCacheState {
+    pub generation: String,
+    pub all_items: Arc<Vec<CleanupSuggestion>>,
+    pub releasable_bytes: u64,
+}
+
+pub fn invalidate_suggestions_cache(cache: &mut Option<SuggestionsCacheState>) {
+    *cache = None;
 }
 
 #[derive(Debug)]
@@ -82,7 +95,13 @@ impl RulesEngine {
         let danger_paths = danger_builder.build().map_err(map_glob_err)?;
 
         let mut cleanup_rules = Vec::new();
+        let mut path_like_prefixes = Vec::new();
         for def in raw.cleanup_rules {
+            for pattern in expand_patterns(&def.path_globs, &username) {
+                if let Some(prefix) = glob_to_like_prefix(&pattern) {
+                    path_like_prefixes.push(prefix);
+                }
+            }
             let include = build_glob_set(&def.path_globs, &username)?;
             let exclude = if def.exclude_globs.is_empty() {
                 None
@@ -95,10 +114,18 @@ impl RulesEngine {
                 exclude,
             });
         }
+        for pattern in expand_patterns(&raw.danger_paths, &username) {
+            if let Some(prefix) = glob_to_like_prefix(&pattern) {
+                path_like_prefixes.push(prefix);
+            }
+        }
+        path_like_prefixes.sort();
+        path_like_prefixes.dedup();
 
         Ok(Self {
             danger_paths,
             cleanup_rules,
+            path_like_prefixes,
         })
     }
 
@@ -142,6 +169,7 @@ impl RulesEngine {
 pub fn get_suggestions(
     conn: &Connection,
     filters: SuggestionFilters<'_>,
+    cache: &mut Option<SuggestionsCacheState>,
 ) -> Result<SuggestionsResult, AppError> {
     if !index::index_ready(conn)? {
         return Err(
@@ -153,18 +181,94 @@ pub fn get_suggestions(
         );
     }
 
-    let engine = RulesEngine::load()?;
-    let mut all_items = Vec::new();
+    let generation = index_generation(conn)?;
+    let cached = get_or_build_cache(conn, cache, &generation)?;
+    let filtered: Vec<CleanupSuggestion> = cached
+        .all_items
+        .iter()
+        .filter(|item| passes_filters(item, &filters))
+        .cloned()
+        .collect();
 
-    let mut stmt = conn
-        .prepare(
-            "SELECT path, is_dir, size_bytes, folder_size, modified_at
-             FROM file_entry",
-        )
+    let total = filtered.len() as u64;
+    let page = filters.page.max(1);
+    let size = filters.size.clamp(1, 500);
+    let start = ((page - 1) as usize).saturating_mul(size as usize);
+    let releasable_bytes: u64 = filtered
+        .iter()
+        .filter(|item| item.risk == "safe")
+        .map(|item| item.size_bytes)
+        .sum();
+    let items = filtered
+        .into_iter()
+        .skip(start)
+        .take(size as usize)
+        .collect();
+
+    Ok(SuggestionsResult {
+        items,
+        releasable_bytes,
+        total,
+    })
+}
+
+fn index_generation(conn: &Connection) -> Result<String, AppError> {
+    let last = crate::services::scan::last_completed_at(conn)?.unwrap_or_default();
+    let count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM file_entry", [], |row| row.get(0))
         .map_err(map_sqlite_err)?;
+    Ok(format!("{last}:{count}"))
+}
 
+fn get_or_build_cache(
+    conn: &Connection,
+    cache: &mut Option<SuggestionsCacheState>,
+    generation: &str,
+) -> Result<SuggestionsCacheState, AppError> {
+    if let Some(cached) = cache {
+        if cached.generation == generation {
+            return Ok(cached.clone());
+        }
+    }
+
+    let engine = RulesEngine::load()?;
+    let all_items = collect_suggestions(conn, &engine)?;
+    let releasable_bytes = all_items
+        .iter()
+        .filter(|item| item.risk == "safe")
+        .map(|item| item.size_bytes)
+        .sum();
+    let next = SuggestionsCacheState {
+        generation: generation.into(),
+        all_items: Arc::new(all_items),
+        releasable_bytes,
+    };
+    *cache = Some(next.clone());
+    Ok(next)
+}
+
+fn collect_suggestions(
+    conn: &Connection,
+    engine: &RulesEngine,
+) -> Result<Vec<CleanupSuggestion>, AppError> {
+    let prefixes = &engine.path_like_prefixes;
+    if prefixes.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let conditions: Vec<String> = (1..=prefixes.len())
+        .map(|index| format!("path LIKE ?{index}"))
+        .collect();
+    let sql = format!(
+        "SELECT path, is_dir, size_bytes, folder_size, modified_at
+         FROM file_entry
+         WHERE {}",
+        conditions.join(" OR ")
+    );
+
+    let mut stmt = conn.prepare(&sql).map_err(map_sqlite_err)?;
     let rows = stmt
-        .query_map([], |row| {
+        .query_map(rusqlite::params_from_iter(prefixes.iter()), |row| {
             Ok((
                 row.get::<_, String>(0)?,
                 row.get::<_, i64>(1)? != 0,
@@ -175,6 +279,7 @@ pub fn get_suggestions(
         })
         .map_err(map_sqlite_err)?;
 
+    let mut all_items = Vec::new();
     for row in rows {
         let (path, is_dir, size_bytes, folder_size, modified_at) = row.map_err(map_sqlite_err)?;
         let Some(rule) = engine.match_rule(&path) else {
@@ -189,7 +294,7 @@ pub fn get_suggestions(
             continue;
         }
 
-        let suggestion = CleanupSuggestion {
+        all_items.push(CleanupSuggestion {
             path: path.clone(),
             is_dir,
             size_bytes: effective_size,
@@ -199,36 +304,11 @@ pub fn get_suggestions(
             description: rule.description.clone(),
             restore_hint: rule.restore_hint.clone(),
             last_modified: modified_at,
-        };
-
-        if passes_filters(&suggestion, &filters) {
-            all_items.push(suggestion);
-        }
+        });
     }
 
     all_items.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
-
-    let releasable_bytes = all_items
-        .iter()
-        .filter(|item| item.risk == "safe")
-        .map(|item| item.size_bytes)
-        .sum();
-
-    let total = all_items.len() as u64;
-    let page = filters.page.max(1);
-    let size = filters.size.clamp(1, 500);
-    let start = ((page - 1) as usize).saturating_mul(size as usize);
-    let items = all_items
-        .into_iter()
-        .skip(start)
-        .take(size as usize)
-        .collect();
-
-    Ok(SuggestionsResult {
-        items,
-        releasable_bytes,
-        total,
-    })
+    Ok(all_items)
 }
 
 fn passes_filters(item: &CleanupSuggestion, filters: &SuggestionFilters<'_>) -> bool {
@@ -287,6 +367,20 @@ fn expand_patterns(patterns: &[String], username: &str) -> Vec<String> {
         .collect()
 }
 
+fn glob_to_like_prefix(pattern: &str) -> Option<String> {
+    let normalized = pattern.replace('/', "\\");
+    let star_idx = normalized.find('*');
+    let fixed = match star_idx {
+        Some(0) => return None,
+        Some(index) => &normalized[..index],
+        None => normalized.as_str(),
+    };
+    if fixed.len() < 4 {
+        return None;
+    }
+    Some(format!("{fixed}%"))
+}
+
 fn normalize_path(path: &str) -> String {
     normalize_windows_path(path)
 }
@@ -333,6 +427,7 @@ mod tests {
                 page: 1,
                 size: 100,
             },
+            &mut None,
         );
         let err = result.expect_err("index not ready");
         assert_eq!(err.code, ErrorCode::IndexNotReady);

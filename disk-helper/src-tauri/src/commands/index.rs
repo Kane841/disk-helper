@@ -4,6 +4,7 @@ use tauri::State;
 use crate::error::ApiResponse;
 use crate::models::index::{CategoryStat, FileNode};
 use crate::services::index;
+use crate::services::rules;
 use crate::state::AppState;
 
 #[derive(Debug, Serialize)]
@@ -19,6 +20,57 @@ pub struct FileNodesResponse {
 #[derive(Debug, Serialize)]
 pub struct FileItemsResponse {
     pub items: Vec<FileNode>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct IndexClearResponse {
+    pub deleted_entries: u64,
+}
+
+#[tauri::command]
+pub fn index_clear(
+    state: State<'_, AppState>,
+    confirmed: bool,
+) -> ApiResponse<IndexClearResponse> {
+    if !confirmed {
+        return ApiResponse::err(
+            crate::error::err(
+                crate::error::ErrorCode::BadArgument,
+                "需要确认后才能清空索引",
+            )
+            .with_target("index"),
+        );
+    }
+
+    let snapshot = state.scan.snapshot();
+    if snapshot.status == "running" || snapshot.status == "paused" {
+        return ApiResponse::err(
+            crate::error::err(
+                crate::error::ErrorCode::ScanAlreadyRunning,
+                "扫描进行中，请完成或取消后再清空索引",
+            )
+            .with_target("index"),
+        );
+    }
+
+    let conn = state.db.lock().expect("db lock");
+    match index::clear(&conn) {
+        Ok(deleted_entries) => {
+            rules::invalidate_suggestions_cache(
+                &mut state.suggestions_cache.lock().expect("suggestions cache lock"),
+            );
+            let _ = crate::services::audit::append(
+                &conn,
+                "index_clear",
+                &format!("清空扫描索引，删除 {deleted_entries} 条记录"),
+                "info",
+                None,
+                None,
+            );
+            ApiResponse::ok(IndexClearResponse { deleted_entries })
+        }
+        Err(error) => ApiResponse::err(error),
+    }
 }
 
 #[tauri::command]

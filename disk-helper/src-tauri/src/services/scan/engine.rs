@@ -39,6 +39,8 @@ pub struct ScanSnapshot {
     pub scanned_files: u64,
     pub skipped_files: u64,
     pub last_completed_at: Option<String>,
+    /// Expected file count for progress bar (from last completed scan or index size).
+    pub estimated_total_files: u64,
 }
 
 impl Default for ScanSnapshot {
@@ -50,6 +52,7 @@ impl Default for ScanSnapshot {
             scanned_files: 0,
             skipped_files: 0,
             last_completed_at: None,
+            estimated_total_files: 0,
         }
     }
 }
@@ -74,6 +77,19 @@ pub fn last_completed_at(conn: &Connection) -> Result<Option<String>, AppError> 
         |row| row.get(0),
     )
     .optional()
+    .map_err(map_sqlite_err)
+}
+
+pub fn last_completed_scanned_files(conn: &Connection) -> Result<u64, AppError> {
+    conn.query_row(
+        "SELECT scanned_files FROM scan_run
+         WHERE status = 'completed' AND finished_at IS NOT NULL
+         ORDER BY finished_at DESC LIMIT 1",
+        [],
+        |row| row.get::<_, i64>(0),
+    )
+    .optional()
+    .map(|count| count.unwrap_or(0).max(0) as u64)
     .map_err(map_sqlite_err)
 }
 
@@ -368,7 +384,11 @@ pub(crate) fn emit_progress(
     snapshot: &Arc<Mutex<ScanSnapshot>>,
     callbacks: &ScanCallbacks,
 ) -> Result<(), AppError> {
-    let percent = progress_percent(scanned_files);
+    let estimated_total = {
+        let snap = snapshot.lock().expect("scan snapshot lock");
+        snap.estimated_total_files
+    };
+    let percent = progress_percent(scanned_files, estimated_total);
     {
         let mut snap = snapshot.lock().expect("scan snapshot lock");
         snap.progress_percent = percent;
@@ -387,11 +407,37 @@ pub(crate) fn emit_progress(
     Ok(())
 }
 
-fn progress_percent(scanned_files: u64) -> u32 {
+fn progress_percent(scanned_files: u64, estimated_total: u64) -> u32 {
     if scanned_files == 0 {
         return 0;
     }
-    ((scanned_files.min(9_900) as f64 / 10_000.0) * 99.0).round() as u32
+    if estimated_total > 0 {
+        let total = estimated_total.max(scanned_files);
+        return ((scanned_files as f64 / total as f64) * 99.0)
+            .round()
+            .clamp(0.0, 99.0) as u32;
+    }
+    // First scan with no baseline: logarithmic curve, cap at 90%.
+    let log = (scanned_files as f64 + 1.0).log10();
+    (log * 12.0).round().clamp(0.0, 90.0) as u32
+}
+
+#[cfg(test)]
+mod progress_tests {
+    use super::progress_percent;
+
+    #[test]
+    fn uses_estimated_total_when_available() {
+        assert_eq!(progress_percent(50_000, 1_000_000), 5);
+        assert_eq!(progress_percent(990_000, 1_000_000), 98);
+        assert_eq!(progress_percent(999_000, 1_000_000), 99);
+    }
+
+    #[test]
+    fn grows_past_estimate_without_hitting_ninety_nine_early() {
+        assert_eq!(progress_percent(100, 0), 24);
+        assert_eq!(progress_percent(1_000, 0), 36);
+    }
 }
 
 pub(crate) fn normalize_windows_path(path: &str) -> String {
