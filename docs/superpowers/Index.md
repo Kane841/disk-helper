@@ -1,11 +1,18 @@
 # Superpowers 工程历史索引
 
 > 自动生于 2026-06-23
-> 共 0 个 spec，1 个 plan，1 个专题
+> 共 0 个 spec，2 个 plan，1 个专题
 
 ---
 
 ## 专题: Disk Helper
+
+- [2026-06-23 Disk Helper v1.1 实现计划](plans/2026-06-23-disk-helper-v1.1.md) — AI 多轮/路径推断/联网检索 + 扫描与加载性能优化；基线 tag v1.0.0；M7–M11 待实施。
+  - <details><summary>详情</summary>
+    - 类型: Plan
+    - 状态: 进行中
+    - 关联文档: [v1.1 PRD 目录](../current/modules/disk-helper/v1.1/)、[v1 计划](plans/2026-06-22-disk-helper-v1.md)
+    </details>
 
 - [2026-06-22 Disk Helper v1 实现计划](plans/2026-06-22-disk-helper-v1.md) — 交付 Windows 本地桌面版 Disk Helper v1：C 盘扫描浏览、规则安全清理、隔离区、操作日志与双通道 AI；M0–M6 已全部完成并验收。
   - <details><summary>详情</summary>

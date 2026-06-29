@@ -1,11 +1,33 @@
 # Docs/Current 当前知识库索引
 
 > 自动生于 2026-06-23
-> 共 14 个文档，1 个模块
+> 共 17 个文档，2 个 plan，2 个模块（含 v1.1 子目录）
 
 ---
 
-## 模块: disk-helper
+## 模块: disk-helper（v1.1 迭代）
+
+> 目录：[modules/disk-helper/v1.1/](modules/disk-helper/v1.1/)
+
+- [PRD 产品概要说明书 v1.1](modules/disk-helper/v1.1/产品概要说明书_v1.1.md) — 状态: 已确认（2026-06-23）。AI 能力解放 + 性能体验 + 本地联网检索。
+  - <details><summary>详情</summary>
+    - 类型: PRD
+    - 关联文档: [AI v1.1](modules/disk-helper/v1.1/PRD_AI智能分析_v1.1.md)、[性能 v1.1](modules/disk-helper/v1.1/PRD_性能与体验_v1.1.md)、[v1.1 实现计划](../../superpowers/plans/2026-06-23-disk-helper-v1.1.md)
+    </details>
+
+- [PRD AI 智能分析 v1.1](modules/disk-helper/v1.1/PRD_AI智能分析_v1.1.md) — 状态: 已确认。多轮对话、路径推断、深度分析、联网检索（本地 Ollama 可用）。
+  - <details><summary>详情</summary>
+    - 类型: PRD
+    </details>
+
+- [PRD 性能与体验 v1.1](modules/disk-helper/v1.1/PRD_性能与体验_v1.1.md) — 状态: 已确认。扫描降耗、进度准确、列表加载优化。
+  - <details><summary>详情</summary>
+    - 类型: PRD
+    </details>
+
+---
+
+## 模块: disk-helper（v1.0 已发布）
 
 - [PRD AI 磁盘管理助手（Disk Helper）产品概要说明书](modules/disk-helper/产品概要说明书_v1.md) — 状态: 已发布。v1 产品范围、角色权限、功能清单与验收标准概要。
   - <details><summary>详情</summary>
