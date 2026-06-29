@@ -3,6 +3,7 @@ import { cn } from "@/lib/cn";
 import { glass } from "@/lib/glass";
 import { text } from "@/lib/theme";
 import { Toast } from "@/components/Toast";
+import { useMockApi } from "@/lib/api";
 
 const navItems = [
   { to: "/overview", label: "总览", icon: "◉" },
@@ -29,7 +30,7 @@ export function AppShell() {
             </div>
           </div>
           <p className={cn("mt-3 text-[11px]", text.muted)}>
-            智能空间管理 · UI 原型
+            智能空间管理 · {useMockApi ? "UI 原型" : "v1 本地版"}
           </p>
         </div>
         <nav className="flex-1 space-y-1 p-3">
@@ -65,7 +66,7 @@ export function AppShell() {
           </NavLink>
         </nav>
         <div className={cn("border-t p-4 text-[10px] glass-divider", text.faint)}>
-          Mock 数据演示
+          {useMockApi ? "Mock 数据演示" : "本地 IPC · 扫描索引已启用"}
         </div>
       </aside>
       <main className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">

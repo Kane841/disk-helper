@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useScanStore } from "@/stores/app-store";
 import { CapacityCard } from "@/components/CapacityCard";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { PageHeader } from "@/components/PageHeader";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/cn";
 
 export function OverviewPage() {
   const navigate = useNavigate();
+  const scanStatus = useScanStore((s) => s.status);
   const { data: volume } = useQuery({
     queryKey: ["volume"],
     queryFn: () => api.volumeGetCDrive(),
@@ -34,6 +36,11 @@ export function OverviewPage() {
       <div className="flex-1 space-y-6 p-6">
         {volume && <CapacityCard volume={volume} />}
         <ScanStatusBar lastCompletedAt={scanInfo?.last_completed_at ?? null} />
+        {(scanStatus === "running" || scanStatus === "paused") && (
+          <p className={cn("text-sm", text.muted)}>
+            扫描进行中，分类占用与浏览数据将在完成后更新。
+          </p>
+        )}
         <div>
           <h3 className={cn("mb-3 text-xs font-semibold uppercase tracking-wider", text.muted)}>
             分类占用

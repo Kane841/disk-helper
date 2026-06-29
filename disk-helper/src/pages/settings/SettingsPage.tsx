@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { api } from "@/lib/api";
+import { api, useMockApi } from "@/lib/api";
 import { TauriApiError } from "@/lib/tauri-client";
 import { useToastStore } from "@/stores/app-store";
 import type { AppSettings } from "@/types";
@@ -12,17 +12,21 @@ import { text } from "@/lib/theme";
 import { PageHeader } from "@/components/PageHeader";
 import { Button, GlassInput } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
+import { GlassModal } from "@/components/GlassModal";
 
 type Tab = "ai" | "appearance" | "quarantine" | "scan" | "advanced";
 
 export function SettingsPage() {
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.show);
   const [tab, setTab] = useState<Tab>("ai");
   const [draft, setDraft] = useState<Partial<AppSettings>>({});
   const [apiKey, setApiKey] = useState("");
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [clearOpen, setClearOpen] = useState(false);
+  const [clearConfirm, setClearConfirm] = useState("");
+  const [clearing, setClearing] = useState(false);
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -30,12 +34,14 @@ export function SettingsPage() {
   });
 
   const merged = { ...settings, ...draft } as AppSettings | undefined;
+  const previewTheme = draft.theme ?? settings?.theme ?? "system";
 
   const update = (partial: Partial<AppSettings>) => {
     setDraft((d) => ({ ...d, ...partial }));
   };
 
   const save = async () => {
+    const savedTheme = draft.theme ?? settings?.theme;
     try {
       await api.configSave({
         ...draft,
@@ -43,6 +49,9 @@ export function SettingsPage() {
       });
       setDraft({});
       setApiKey("");
+      if (savedTheme) {
+        setTheme(savedTheme);
+      }
       queryClient.invalidateQueries({ queryKey: ["settings"] });
       showToast("设置已保存");
     } catch (error) {
@@ -63,6 +72,32 @@ export function SettingsPage() {
       const message =
         error instanceof TauriApiError ? error.message : "连接测试失败";
       setTestResult(message);
+    }
+  };
+
+  const handleClearIndex = async () => {
+    if (clearConfirm !== "清空索引") {
+      showToast('请输入确认文字「清空索引」');
+      return;
+    }
+    setClearing(true);
+    try {
+      const res = await api.indexClear(true);
+      setClearOpen(false);
+      setClearConfirm("");
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["index-children"] });
+      queryClient.invalidateQueries({ queryKey: ["top-files"] });
+      queryClient.invalidateQueries({ queryKey: ["top-folders"] });
+      queryClient.invalidateQueries({ queryKey: ["suggestions"] });
+      queryClient.invalidateQueries({ queryKey: ["scan-status"] });
+      showToast(`已清空索引（${res.deleted_entries} 条记录）`);
+    } catch (error) {
+      const message =
+        error instanceof TauriApiError ? error.message : "清空索引失败";
+      showToast(message);
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -169,10 +204,13 @@ export function SettingsPage() {
                     <button
                       key={t}
                       type="button"
-                      onClick={() => setTheme(t)}
+                      onClick={() => {
+                        setTheme(t);
+                        update({ theme: t });
+                      }}
                       className={cn(
-                        "rounded-xl px-4 py-2 text-sm capitalize",
-                        theme === t ? glass.navActive : glass.navIdle,
+                        "cursor-pointer rounded-xl px-4 py-2 text-sm capitalize",
+                        previewTheme === t ? glass.navActive : glass.navIdle,
                       )}
                     >
                       {t === "system" ? "跟随系统" : t === "light" ? "浅色" : "深色"}
@@ -235,34 +273,82 @@ export function SettingsPage() {
               </>
             )}
             {tab === "advanced" && merged && (
-              <div>
-                <label className={text.label}>软删除默认目标</label>
-                <div className="mt-3 flex gap-2">
-                  {(["quarantine", "recycle_bin"] as const).map((target) => (
-                    <button
-                      key={target}
-                      type="button"
-                      onClick={() => update({ soft_delete_target: target })}
-                      className={cn(
-                        "rounded-xl px-4 py-2 text-sm",
-                        merged.soft_delete_target === target ? glass.navActive : glass.navIdle,
-                      )}
-                    >
-                      {target === "quarantine" ? "隔离区" : "回收站"}
-                    </button>
-                  ))}
+              <div className="space-y-6">
+                <div>
+                  <label className={text.label}>软删除默认目标</label>
+                  <div className="mt-3 flex gap-2">
+                    {(["quarantine", "recycle_bin"] as const).map((target) => (
+                      <button
+                        key={target}
+                        type="button"
+                        onClick={() => update({ soft_delete_target: target })}
+                        className={cn(
+                          "rounded-xl px-4 py-2 text-sm",
+                          merged.soft_delete_target === target ? glass.navActive : glass.navIdle,
+                        )}
+                      >
+                        {target === "quarantine" ? "隔离区" : "回收站"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                {!useMockApi && (
+                  <div className="space-y-3 border-t border-white/25 pt-4 dark:border-white/10">
+                    <label className={text.label}>清空扫描索引</label>
+                    <p className={cn("text-sm", text.muted)}>
+                      删除已扫描的文件索引与扫描记录，不影响隔离区与操作日志。清空后需重新全盘扫描。
+                    </p>
+                    <Button variant="secondary" onClick={() => setClearOpen(true)}>
+                      清空索引…
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
             <div className="flex gap-2 border-t border-white/25 pt-4 dark:border-white/10">
               <Button onClick={save}>保存</Button>
-              <Button variant="secondary" onClick={() => setDraft({})}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  if (draft.theme) {
+                    setTheme(settings?.theme ?? "system");
+                  }
+                  setDraft({});
+                }}
+              >
                 重置未保存更改
               </Button>
             </div>
           </CardBody>
         </Card>
       </div>
+      <GlassModal
+        open={clearOpen}
+        onClose={() => {
+          setClearOpen(false);
+          setClearConfirm("");
+        }}
+        title="确认清空扫描索引"
+        danger
+      >
+        <p className={cn("text-sm", text.muted)}>
+          此操作不可撤销。请输入「清空索引」以确认。
+        </p>
+        <GlassInput
+          className="mt-4 w-full"
+          placeholder="清空索引"
+          value={clearConfirm}
+          onChange={(e) => setClearConfirm(e.target.value)}
+        />
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setClearOpen(false)}>
+            取消
+          </Button>
+          <Button disabled={clearing} onClick={handleClearIndex}>
+            {clearing ? "清空中…" : "确认清空"}
+          </Button>
+        </div>
+      </GlassModal>
     </div>
   );
 }

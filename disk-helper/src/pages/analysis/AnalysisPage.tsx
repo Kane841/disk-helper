@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSelectionStore, useToastStore } from "@/stores/app-store";
 import { api } from "@/lib/api";
 import { TauriApiError } from "@/lib/tauri-client";
@@ -14,6 +15,10 @@ import { Button, GlassInput } from "@/components/ui/button";
 export function AnalysisPage() {
   const { items, source, clear } = useSelectionStore();
   const showToast = useToastStore((s) => s.show);
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => api.configGet(),
+  });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -89,7 +94,15 @@ export function AnalysisPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <PageHeader
           title="AI 智能分析"
-          description="云端 DeepSeek / 本地 Ollama"
+          description={
+            settings
+              ? settings.ai_mode === "local"
+                ? `本地 Ollama · ${settings.ollama_model}`
+                : settings.has_api_key
+                  ? "云端 DeepSeek API"
+                  : "云端模式：请先在设置中配置 API Key"
+              : "云端 DeepSeek / 本地 Ollama"
+          }
         />
         <div className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-2xl space-y-4">

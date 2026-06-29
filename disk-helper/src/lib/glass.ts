@@ -12,7 +12,7 @@ export const glass = {
   navActive:
     "glass-nav-active text-emerald-800 ring-1 ring-white/50 dark:text-emerald-100 dark:ring-white/10",
   navIdle:
-    "text-zinc-600 hover:bg-white/35 hover:text-zinc-900 dark:text-zinc-200 dark:hover:bg-white/8 dark:hover:text-zinc-50",
+    "cursor-pointer text-zinc-600 hover:bg-white/35 hover:text-zinc-900 dark:text-zinc-200 dark:hover:bg-white/8 dark:hover:text-zinc-50",
 } as const;
 
 export function glassCn(...classes: (string | false | undefined | null)[]) {

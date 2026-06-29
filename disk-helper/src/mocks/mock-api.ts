@@ -107,7 +107,9 @@ export const mockApi = {
     risk?: RiskLevel | "all";
     category?: string;
     path_keyword?: string;
-  }): Promise<{ items: CleanupSuggestion[]; releasable_bytes: number }> {
+    page?: number;
+    size?: number;
+  }): Promise<{ items: CleanupSuggestion[]; releasable_bytes: number; total: number }> {
     await delay();
     let items = [...mockSuggestions];
     if (filters?.risk && filters.risk !== "all") {
@@ -123,7 +125,12 @@ export const mockApi = {
     const releasable_bytes = items
       .filter((i) => i.risk === "safe")
       .reduce((s, i) => s + i.size_bytes, 0);
-    return { items, releasable_bytes };
+    const total = items.length;
+    const page = Math.max(1, filters?.page ?? 1);
+    const size = Math.max(1, filters?.size ?? 50);
+    const start = (page - 1) * size;
+    items = items.slice(start, start + size);
+    return { items, releasable_bytes, total };
   },
 
   async quarantineList(): Promise<QuarantineItem[]> {
@@ -201,6 +208,11 @@ export const mockApi = {
   async configGet(): Promise<AppSettings> {
     await delay();
     return { ...settings };
+  },
+
+  async indexClear(_confirmed = true): Promise<{ deleted_entries: number }> {
+    await delay(300);
+    return { deleted_entries: 0 };
   },
 
   async configSave(partial: Partial<AppSettings>): Promise<void> {

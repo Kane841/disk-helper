@@ -1,12 +1,33 @@
+import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppShell } from "./AppShell";
-import { OverviewPage } from "@/pages/overview/OverviewPage";
-import { ExplorerPage } from "@/pages/explorer/ExplorerPage";
-import { CleanupPage } from "@/pages/cleanup/CleanupPage";
-import { QuarantinePage } from "@/pages/quarantine/QuarantinePage";
-import { AnalysisPage } from "@/pages/analysis/AnalysisPage";
-import { SettingsPage } from "@/pages/settings/SettingsPage";
-import { AuditLogPage } from "@/pages/audit/AuditLogPage";
+import { PageLoader } from "@/components/PageLoader";
+
+const OverviewPage = lazy(() =>
+  import("@/pages/overview/OverviewPage").then((m) => ({ default: m.OverviewPage })),
+);
+const ExplorerPage = lazy(() =>
+  import("@/pages/explorer/ExplorerPage").then((m) => ({ default: m.ExplorerPage })),
+);
+const CleanupPage = lazy(() =>
+  import("@/pages/cleanup/CleanupPage").then((m) => ({ default: m.CleanupPage })),
+);
+const QuarantinePage = lazy(() =>
+  import("@/pages/quarantine/QuarantinePage").then((m) => ({ default: m.QuarantinePage })),
+);
+const AnalysisPage = lazy(() =>
+  import("@/pages/analysis/AnalysisPage").then((m) => ({ default: m.AnalysisPage })),
+);
+const SettingsPage = lazy(() =>
+  import("@/pages/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })),
+);
+const AuditLogPage = lazy(() =>
+  import("@/pages/audit/AuditLogPage").then((m) => ({ default: m.AuditLogPage })),
+);
+
+function LazyPage({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
+}
 
 export const router = createBrowserRouter([
   {
@@ -14,13 +35,62 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <Navigate to="/overview" replace /> },
-      { path: "overview", element: <OverviewPage /> },
-      { path: "explorer", element: <ExplorerPage /> },
-      { path: "cleanup", element: <CleanupPage /> },
-      { path: "quarantine", element: <QuarantinePage /> },
-      { path: "analysis", element: <AnalysisPage /> },
-      { path: "settings", element: <SettingsPage /> },
-      { path: "settings/audit", element: <AuditLogPage /> },
+      {
+        path: "overview",
+        element: (
+          <LazyPage>
+            <OverviewPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: "explorer",
+        element: (
+          <LazyPage>
+            <ExplorerPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: "cleanup",
+        element: (
+          <LazyPage>
+            <CleanupPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: "quarantine",
+        element: (
+          <LazyPage>
+            <QuarantinePage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: "analysis",
+        element: (
+          <LazyPage>
+            <AnalysisPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: "settings",
+        element: (
+          <LazyPage>
+            <SettingsPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: "settings/audit",
+        element: (
+          <LazyPage>
+            <AuditLogPage />
+          </LazyPage>
+        ),
+      },
     ],
   },
 ]);

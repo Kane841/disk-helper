@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToastStore } from "@/stores/app-store";
@@ -18,19 +18,33 @@ const STATUS_LABELS = {
   expired: "已过期",
 };
 
+const PAGE_SIZE = 50;
+
 export function QuarantinePage() {
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.show);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [purgeOpen, setPurgeOpen] = useState(false);
   const [purgeText, setPurgeText] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data: items = [] } = useQuery({
+  const { data: items = [], isLoading } = useQuery({
     queryKey: ["quarantine"],
     queryFn: () => api.quarantineList(),
+    staleTime: 30_000,
   });
 
-  const totalSize = items.reduce((s, i) => s + i.size_bytes, 0);
+  const totalSize = useMemo(
+    () => items.reduce((sum, item) => sum + item.size_bytes, 0),
+    [items],
+  );
+
+  const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const pageItems = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return items.slice(start, start + PAGE_SIZE);
+  }, [items, safePage]);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -101,48 +115,77 @@ export function QuarantinePage() {
         </div>
         <Card strong>
           <CardBody className="p-0">
-            {items.length === 0 ? (
+            {isLoading ? (
+              <p className={cn("p-12 text-center text-sm", text.muted)}>加载隔离区列表…</p>
+            ) : items.length === 0 ? (
               <p className={cn("p-12 text-center text-sm", text.muted)}>
                 隔离区为空，清理的文件将显示在这里
               </p>
             ) : (
-              <table className="w-full text-sm">
-                <thead className={cn("text-left text-xs", glass.tableHead)}>
-                  <tr>
-                    <th className="w-10 px-4 py-3" />
-                    <th className="px-4 py-3">原路径</th>
-                    <th className="px-4 py-3">大小</th>
-                    <th className="px-4 py-3">移入时间</th>
-                    <th className="px-4 py-3">状态</th>
-                    <th className="px-4 py-3">风险</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-white/20 dark:border-white/5"
-                    >
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selected.has(item.id)}
-                          onChange={() => toggle(item.id)}
-                        />
-                      </td>
-                      <td className="max-w-md truncate px-4 py-3" title={item.original_path}>
-                        {item.original_path}
-                      </td>
-                      <td className="px-4 py-3">{formatBytes(item.size_bytes)}</td>
-                      <td className="px-4 py-3">{formatDateTime(item.moved_at)}</td>
-                      <td className="px-4 py-3">{STATUS_LABELS[item.status]}</td>
-                      <td className="px-4 py-3">
-                        <RiskBadge risk={item.risk} />
-                      </td>
+              <>
+                <table className="w-full text-sm">
+                  <thead className={cn("text-left text-xs", glass.tableHead)}>
+                    <tr>
+                      <th className="w-10 px-4 py-3" />
+                      <th className="px-4 py-3">原路径</th>
+                      <th className="px-4 py-3">大小</th>
+                      <th className="px-4 py-3">移入时间</th>
+                      <th className="px-4 py-3">状态</th>
+                      <th className="px-4 py-3">风险</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {pageItems.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-b border-white/20 dark:border-white/5"
+                      >
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(item.id)}
+                            onChange={() => toggle(item.id)}
+                          />
+                        </td>
+                        <td className="max-w-md truncate px-4 py-3" title={item.original_path}>
+                          {item.original_path}
+                        </td>
+                        <td className="px-4 py-3">{formatBytes(item.size_bytes)}</td>
+                        <td className="px-4 py-3">{formatDateTime(item.moved_at)}</td>
+                        <td className="px-4 py-3">{STATUS_LABELS[item.status]}</td>
+                        <td className="px-4 py-3">
+                          <RiskBadge risk={item.risk} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {pageCount > 1 && (
+                  <div className="flex items-center justify-between border-t border-white/20 px-4 py-3 text-sm dark:border-white/5">
+                    <span className={text.muted}>
+                      第 {safePage} / {pageCount} 页
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={safePage <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      >
+                        上一页
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={safePage >= pageCount}
+                        onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                      >
+                        下一页
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </CardBody>
         </Card>

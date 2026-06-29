@@ -23,6 +23,15 @@ export class TauriApiError extends Error {
   }
 }
 
+function ipcErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return "IPC 调用失败";
+}
+
 /** Invoke a Tauri command and unwrap the `{ data, error }` envelope. */
 export async function invokeApi<T>(
   command: string,
@@ -32,9 +41,7 @@ export async function invokeApi<T>(
   try {
     response = await invoke<ApiResponse<T>>(command, args ?? {});
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "IPC 调用失败";
-    throw new TauriApiError({ code: "InternalError", message });
+    throw new TauriApiError({ code: "InternalError", message: ipcErrorMessage(error) });
   }
   if (response.error) {
     throw new TauriApiError(response.error);

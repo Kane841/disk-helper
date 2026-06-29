@@ -12,7 +12,15 @@ import type {
   VolumeInfo,
 } from "@/types";
 
-export const useMockApi = import.meta.env.VITE_USE_MOCK !== "false";
+function isTauriRuntime(): boolean {
+  if (typeof window === "undefined") return false;
+  return "__TAURI_INTERNALS__" in window || "__TAURI__" in window;
+}
+
+/** Mock in browser prototype only; Tauri desktop defaults to real IPC. */
+export const useMockApi =
+  import.meta.env.VITE_USE_MOCK === "true" ||
+  (import.meta.env.VITE_USE_MOCK !== "false" && !isTauriRuntime());
 
 export interface ScanStatusPayload {
   status: ScanStatus;
@@ -92,7 +100,7 @@ const tauriIpcApi = {
     path_keyword?: string;
     page?: number;
     size?: number;
-  }): Promise<{ items: CleanupSuggestion[]; releasable_bytes: number; total?: number }> {
+  }): Promise<{ items: CleanupSuggestion[]; releasable_bytes: number; total: number }> {
     return invokeApi("rules_get_suggestions", {
       riskFilter: filters?.risk,
       categoryFilter: filters?.category,
@@ -155,23 +163,29 @@ const tauriIpcApi = {
     return invokeApi("audit_clear", { confirmed });
   },
 
+  async indexClear(confirmed = true): Promise<{ deleted_entries: number }> {
+    return invokeApi("index_clear", { confirmed });
+  },
+
   configGet(): Promise<AppSettings> {
     return invokeApi("config_get");
   },
 
   configSave(partial: Partial<AppSettings> & { api_key?: string }): Promise<AppSettings> {
     return invokeApi("config_save", {
-      theme: partial.theme,
-      aiMode: partial.ai_mode,
-      ollamaBaseUrl: partial.ollama_base_url,
-      ollamaModel: partial.ollama_model,
-      apiKey: partial.api_key,
-      quarantineRoot: partial.quarantine_root,
-      retentionDays: partial.retention_days,
-      adminScanEnabled: partial.admin_scan_enabled,
-      warningThresholdGb: partial.warning_threshold_gb,
-      criticalThresholdGb: partial.critical_threshold_gb,
-      softDeleteTarget: partial.soft_delete_target,
+      input: {
+        theme: partial.theme,
+        aiMode: partial.ai_mode,
+        ollamaBaseUrl: partial.ollama_base_url,
+        ollamaModel: partial.ollama_model,
+        apiKey: partial.api_key,
+        quarantineRoot: partial.quarantine_root,
+        retentionDays: partial.retention_days,
+        adminScanEnabled: partial.admin_scan_enabled,
+        warningThresholdGb: partial.warning_threshold_gb,
+        criticalThresholdGb: partial.critical_threshold_gb,
+        softDeleteTarget: partial.soft_delete_target,
+      },
     });
   },
 
